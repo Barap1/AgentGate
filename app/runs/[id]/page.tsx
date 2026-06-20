@@ -27,6 +27,27 @@ function metadataString(
     : fallback;
 }
 
+function outputCopy(verdict: string) {
+  if (verdict === "BLOCK") {
+    return {
+      title: "Blocked output",
+      helper: "This content should not be passed to the agent."
+    };
+  }
+
+  if (verdict === "ALLOW") {
+    return {
+      title: "Allowed content",
+      helper: "This is the content that would be passed to the agent."
+    };
+  }
+
+  return {
+    title: "Sanitized content",
+    helper: "This is the content that would be passed to the agent."
+  };
+}
+
 async function loadRun(id: string) {
   try {
     return {
@@ -71,11 +92,17 @@ export default async function RunDetailPage({
     );
   }
 
-  const removedContent =
-    run.removed && run.extractedInjection
+  const output = outputCopy(run.verdict);
+  const blockedDueToFailedRemoval =
+    run.verdict === "BLOCK" &&
+    !run.removed &&
+    run.sanitizedContent.startsWith("[BLOCKED:");
+  const removedContent = blockedDueToFailedRemoval
+    ? "No safe removal span was found. The content was blocked."
+    : run.removed && run.extractedInjection
       ? run.extractedInjection
       : run.removed
-        ? "Content was removed, but no extracted span was stored."
+        ? "Injected instruction removed."
         : "No content removed.";
 
   return (
@@ -150,8 +177,8 @@ export default async function RunDetailPage({
 
           <section className="result-section">
             <div className="section-title-row">
-              <h3>Sanitized content</h3>
-              <span>Passed to agent</span>
+              <h3>{output.title}</h3>
+              <span>{output.helper}</span>
             </div>
             <CodeBlock value={run.sanitizedContent} copyable />
           </section>

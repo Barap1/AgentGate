@@ -14,6 +14,35 @@ function formatBoolean(value: boolean) {
   return value ? "Yes" : "No";
 }
 
+function outputCopy(result: SanitizeResult) {
+  if (result.verdict === "BLOCK") {
+    return {
+      title: "Blocked output",
+      helper: "This content should not be passed to the agent."
+    };
+  }
+
+  if (result.verdict === "ALLOW") {
+    return {
+      title: "Allowed content",
+      helper: "This is the content that would be passed to the agent."
+    };
+  }
+
+  return {
+    title: "Sanitized content",
+    helper: "This is the content that would be passed to the agent."
+  };
+}
+
+function blockedDueToFailedRemoval(result: SanitizeResult) {
+  return (
+    result.verdict === "BLOCK" &&
+    !result.removed &&
+    result.sanitizedContent.startsWith("[BLOCKED:")
+  );
+}
+
 export function ResultPanel({ result, error }: ResultPanelProps) {
   if (error) {
     return (
@@ -43,11 +72,13 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
     );
   }
 
-  const removedContent =
-    result.removed && result.extractedInjection
+  const output = outputCopy(result);
+  const removedContent = blockedDueToFailedRemoval(result)
+    ? "No safe removal span was found. The content was blocked."
+    : result.removed && result.extractedInjection
       ? result.extractedInjection
       : result.removed
-        ? "Content was removed, but the model did not return a separate extracted span."
+        ? "Injected instruction removed."
         : "No content removed.";
 
   return (
@@ -117,8 +148,8 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
 
       <section className="result-section">
         <div className="section-title-row">
-          <h3>Sanitized content</h3>
-          <span>Passed to agent</span>
+          <h3>{output.title}</h3>
+          <span>{output.helper}</span>
         </div>
         <CodeBlock value={result.sanitizedContent} copyable />
       </section>

@@ -1,4 +1,8 @@
-import type { SanitizeRequest, SanitizeResult } from "@/lib/guardrail/types";
+import type {
+  SanitizeRequest,
+  SanitizeResult,
+  Verdict
+} from "@/lib/guardrail/types";
 import { fuzzyRemove } from "@/lib/guardrail/fuzzyRemove";
 import { buildGuardrailSystemPrompt } from "@/lib/guardrail/prompts";
 import { getGuardrailProvider } from "@/lib/guardrail/providers";
@@ -13,6 +17,46 @@ function getMaxOutputTokens() {
   const parsed = rawValue ? Number.parseInt(rawValue, 10) : 512;
 
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 512;
+}
+
+const blockedSanitizationFailedMessage =
+  "[BLOCKED: prompt injection detected and safe sanitization failed]";
+
+const blockedSanitizationWarning =
+  "Injection was detected, but the exact injected span could not be safely removed. Content was blocked instead of passed to the agent.";
+
+const highRiskBlockCategories = new Set([
+  "data_exfiltration",
+  "credential_theft",
+  "system_prompt_extraction",
+  "tool_abuse"
+]);
+
+function shouldBlockFailedRemoval({
+  containsInjection,
+  removed,
+  riskLevel,
+  verdict,
+  categories
+}: {
+  containsInjection: boolean;
+  removed: boolean;
+  riskLevel: string;
+  verdict: Verdict;
+  categories: string[];
+}) {
+  if (!containsInjection || removed) {
+    return false;
+  }
+
+  if (riskLevel === "critical" || verdict === "BLOCK") {
+    return true;
+  }
+
+  return (
+    riskLevel === "high" &&
+    categories.some((category) => highRiskBlockCategories.has(category))
+  );
 }
 
 export async function sanitizeContent(
@@ -34,14 +78,23 @@ export async function sanitizeContent(
   const removal = fuzzyRemove(request.content, modelResult.injectedPrompt);
   const riskScore = calculateRiskScore(modelResult);
   const riskLevel = riskLevelFromScore(riskScore);
-  const verdict = verdictFromRisk({
+  const baseVerdict = verdictFromRisk({
     containsInjection: modelResult.containsInjection,
     riskScore,
     removed: removal.removed
   });
+  const blockFailedRemoval = shouldBlockFailedRemoval({
+    containsInjection: modelResult.containsInjection,
+    removed: removal.removed,
+    riskLevel,
+    verdict: baseVerdict,
+    categories: modelResult.categories
+  });
+  const verdict: Verdict = blockFailedRemoval ? "BLOCK" : baseVerdict;
 
   const warnings = [
     ...(removal.warning ? [removal.warning] : []),
+    ...(blockFailedRemoval ? [blockedSanitizationWarning] : []),
     ...(!modelResult.containsInjection && modelResult.injectedPrompt
       ? ["Model returned an extracted prompt while containsInjection was false."]
       : []),
@@ -59,7 +112,9 @@ export async function sanitizeContent(
     userTask: request.userTask,
     originalContent: request.content,
     extractedInjection: modelResult.injectedPrompt,
-    sanitizedContent: removal.sanitized,
+    sanitizedContent: blockFailedRemoval
+      ? blockedSanitizationFailedMessage
+      : removal.sanitized,
     removed: removal.removed,
     provider: providerName,
     modelUsed,
