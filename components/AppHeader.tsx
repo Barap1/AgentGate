@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 type AppHeaderProps = {
-  active?: "scanner" | "runs" | "docs";
+  active?: "home" | "sources" | "runs" | "docs";
 };
 
-export function AppHeader({ active = "scanner" }: AppHeaderProps) {
+export function AppHeader({ active = "home" }: AppHeaderProps) {
   return (
     <header className="app-header">
       <Link className="brand" href="/" aria-label="AgentGate scanner">
@@ -17,8 +17,14 @@ export function AppHeader({ active = "scanner" }: AppHeaderProps) {
         </span>
       </Link>
       <nav className="nav-links" aria-label="Primary navigation">
-        <Link className={active === "scanner" ? "nav-link active" : "nav-link"} href="/">
-          Scanner
+        <Link className={active === "home" ? "nav-link active" : "nav-link"} href="/">
+          Home
+        </Link>
+        <Link
+          className={active === "sources" ? "nav-link active" : "nav-link"}
+          href="/sources"
+        >
+          Sources
         </Link>
         <Link className={active === "runs" ? "nav-link active" : "nav-link"} href="/runs">
           Runs

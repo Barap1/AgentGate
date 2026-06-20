@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGuardrailRun } from "@/lib/db/runs";
+import { getGuardrailRun, normalizeRunHistoryError } from "@/lib/db/runs";
 
 export const runtime = "nodejs";
 
@@ -37,14 +37,14 @@ export async function GET(
       run
     });
   } catch (error) {
+    const runHistoryError = normalizeRunHistoryError(error);
+
     return NextResponse.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Run history is unavailable."
+        error: runHistoryError.message,
+        code: runHistoryError.code
       },
-      { status: 500 }
+      { status: runHistoryError.status }
     );
   }
 }

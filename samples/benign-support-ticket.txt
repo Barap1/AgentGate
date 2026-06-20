@@ -1,0 +1,4 @@
+Customer reports that their billing address is outdated.
+
+They asked support to update the address on file and confirm whether the next
+invoice will use the new details.

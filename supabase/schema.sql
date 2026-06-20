@@ -74,5 +74,5 @@ create index if not exists guardrail_findings_severity_idx
 alter table public.guardrail_runs enable row level security;
 alter table public.guardrail_findings enable row level security;
 
--- Phase 3 intentionally adds no anon/authenticated policies.
+-- Phase 3/4 intentionally adds no anon/authenticated policies.
 -- Server route handlers use the service role key for local-demo persistence.

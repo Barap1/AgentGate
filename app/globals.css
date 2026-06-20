@@ -183,7 +183,8 @@ h1 {
 }
 
 .scanner-intro p:not(.section-kicker),
-.docs-hero p {
+.docs-hero p,
+.sources-hero p:not(.section-kicker) {
   max-width: 710px;
   margin: 14px 0 0;
   color: var(--muted);
@@ -312,6 +313,7 @@ h1 {
   line-height: 1.4;
 }
 
+.field input,
 .field textarea,
 .field select {
   width: 100%;
@@ -338,6 +340,16 @@ h1 {
   padding: 0 10px;
 }
 
+.field input {
+  min-height: 40px;
+  padding: 0 10px;
+}
+
+.field input[type="file"] {
+  padding: 8px 10px;
+}
+
+.field input:focus,
 .field textarea:focus,
 .field select:focus {
   border-color: var(--accent);
@@ -814,6 +826,95 @@ h1 {
   margin-bottom: 12px;
 }
 
+.sources-shell {
+  max-width: 1180px;
+}
+
+.sources-hero {
+  margin-bottom: 24px;
+}
+
+.sources-hero h1 {
+  max-width: 790px;
+  font-size: clamp(2rem, 4vw, 3.1rem);
+}
+
+.sources-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.source-card {
+  padding: 18px;
+}
+
+.source-card-copy {
+  margin: 0 0 16px;
+  color: var(--muted-strong);
+  line-height: 1.55;
+}
+
+.source-form {
+  display: grid;
+  gap: 0;
+}
+
+.field textarea.compact-content {
+  min-height: 170px;
+}
+
+.source-result {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.source-result.error-box {
+  padding: 14px;
+  border-top: 1px solid #fecaca;
+}
+
+.source-result-empty {
+  color: var(--muted);
+}
+
+.source-result-empty strong {
+  display: block;
+  color: var(--muted-strong);
+  font-size: 0.88rem;
+}
+
+.source-result-empty p {
+  margin: 5px 0 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.source-result-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.source-result-topline a,
+.source-result-topline span {
+  color: var(--accent-strong);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.source-result-topline a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.compact-metadata {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .saved-run-callout {
   display: flex;
   align-items: center;
@@ -908,7 +1009,7 @@ h1 {
 .runs-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 920px;
+  min-width: 980px;
 }
 
 .runs-table th,
@@ -988,7 +1089,8 @@ h1 {
   .scanner-intro,
   .workspace,
   .docs-layout,
-  .run-detail-grid {
+  .run-detail-grid,
+  .sources-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1045,6 +1147,7 @@ h1 {
 
   .field-grid,
   .metadata-grid,
+  .compact-metadata,
   .docs-toc {
     grid-template-columns: 1fr;
   }

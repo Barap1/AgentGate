@@ -15,6 +15,18 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+function metadataString(
+  metadata: Record<string, unknown>,
+  field: string,
+  fallback = "direct api"
+) {
+  const value = metadata[field];
+
+  return typeof value === "string" && value.trim().length > 0
+    ? value.replaceAll("_", " ")
+    : fallback;
+}
+
 async function loadRun(id: string) {
   try {
     return {
@@ -99,6 +111,10 @@ export default async function RunDetailPage({
               <dd>{run.sourceType.replaceAll("_", " ")}</dd>
             </div>
             <div>
+              <dt>Method</dt>
+              <dd>{metadataString(run.metadata, "ingestion_method")}</dd>
+            </div>
+            <div>
               <dt>Injection</dt>
               <dd>{run.containsInjection ? "Yes" : "No"}</dd>
             </div>
@@ -173,6 +189,13 @@ export default async function RunDetailPage({
                   <li key={warning}>{warning}</li>
                 ))}
               </ul>
+            </section>
+          ) : null}
+
+          {Object.keys(run.metadata).length > 0 ? (
+            <section className="result-section">
+              <h3>Metadata</h3>
+              <CodeBlock value={JSON.stringify(run.metadata, null, 2)} copyable />
             </section>
           ) : null}
         </article>

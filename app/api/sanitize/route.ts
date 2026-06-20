@@ -1,43 +1,10 @@
 import { NextResponse } from "next/server";
-import { saveGuardrailRun } from "@/lib/db/runs";
-import { sanitizeContent } from "@/lib/guardrail/sanitize";
-import {
-  validateSanitizeRequest,
-  ValidationError
-} from "@/lib/utils/validation";
+import { clientErrorMessage } from "@/lib/guardrail/errors";
+import { runGuardrailPipeline } from "@/lib/guardrail/pipeline";
+import type { SanitizeRequest } from "@/lib/guardrail/types";
+import { ValidationError } from "@/lib/utils/validation";
 
 export const runtime = "nodejs";
-
-function clientErrorMessage(error: unknown) {
-  const message =
-    error instanceof Error ? error.message : "Unexpected sanitization failure.";
-  const lowerMessage = message.toLowerCase();
-
-  if (
-    lowerMessage.includes("api key") ||
-    lowerMessage.includes("no usable guardrail provider")
-  ) {
-    return "No LLM provider API key configured. Add one to `.env.local`.";
-  }
-
-  if (
-    lowerMessage.includes("quota") ||
-    lowerMessage.includes("rate limit") ||
-    lowerMessage.includes("rate")
-  ) {
-    return "Provider rate limit exceeded. Wait and retry, reduce input size, or switch providers.";
-  }
-
-  if (
-    lowerMessage.includes("unavailable") ||
-    lowerMessage.includes("overloaded") ||
-    lowerMessage.includes("capacity")
-  ) {
-    return "Provider is temporarily unavailable. Wait and retry, reduce input size, or switch providers.";
-  }
-
-  return message;
-}
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -55,30 +22,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const sanitizeRequest = validateSanitizeRequest(body);
-    const result = await sanitizeContent(sanitizeRequest);
+    const result = await runGuardrailPipeline(body as SanitizeRequest);
 
-    try {
-      const runId = await saveGuardrailRun(result);
-
-      return NextResponse.json({
-        ...result,
-        runId,
-        persisted: true
-      });
-    } catch (persistenceError) {
-      console.warn("Failed to persist guardrail run", persistenceError);
-
-      return NextResponse.json({
-        ...result,
-        runId: null,
-        persisted: false,
-        warnings: [
-          ...result.warnings,
-          "Persistence is not configured; result was not saved."
-        ]
-      });
-    }
+    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof ValidationError) {
       return NextResponse.json(

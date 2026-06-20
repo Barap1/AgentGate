@@ -16,6 +16,18 @@ function snippet(value: string, length = 82) {
   return value.length > length ? `${value.slice(0, length).trim()}...` : value;
 }
 
+function metadataString(
+  metadata: Record<string, unknown>,
+  field: string,
+  fallback = "direct api"
+) {
+  const value = metadata[field];
+
+  return typeof value === "string" && value.trim().length > 0
+    ? value.replaceAll("_", " ")
+    : fallback;
+}
+
 function RunsTable({ runs }: { runs: GuardrailRunSummary[] }) {
   if (runs.length === 0) {
     return (
@@ -34,6 +46,7 @@ function RunsTable({ runs }: { runs: GuardrailRunSummary[] }) {
             <th>Created</th>
             <th>Decision</th>
             <th>Risk</th>
+            <th>Method</th>
             <th>Source</th>
             <th>Trusted task</th>
             <th>Injection</th>
@@ -54,6 +67,7 @@ function RunsTable({ runs }: { runs: GuardrailRunSummary[] }) {
                   {run.riskLevel} / {run.riskScore}
                 </span>
               </td>
+              <td>{metadataString(run.metadata, "ingestion_method")}</td>
               <td>{run.sourceType.replaceAll("_", " ")}</td>
               <td>{snippet(run.userTask)}</td>
               <td>{run.containsInjection ? "Yes" : "No"}</td>
@@ -72,9 +86,11 @@ export default async function RunsPage() {
 
   try {
     runs = await listGuardrailRuns(50);
-  } catch {
+  } catch (runHistoryError) {
     error =
-      "Run history is unavailable until Supabase environment variables are configured.";
+      runHistoryError instanceof Error
+        ? runHistoryError.message
+        : "Run history is unavailable.";
   }
 
   return (

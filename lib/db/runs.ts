@@ -8,6 +8,23 @@ import type {
 } from "@/lib/guardrail/types";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 
+export type RunHistoryErrorCode =
+  | "SUPABASE_NOT_CONFIGURED"
+  | "RUN_HISTORY_SCHEMA_MISSING"
+  | "RUN_HISTORY_UNAVAILABLE";
+
+export class RunHistoryError extends Error {
+  code: RunHistoryErrorCode;
+  status: number;
+
+  constructor(message: string, code: RunHistoryErrorCode, status = 503) {
+    super(message);
+    this.name = "RunHistoryError";
+    this.code = code;
+    this.status = status;
+  }
+}
+
 export type GuardrailRunSummary = {
   id: string;
   createdAt: string;
@@ -23,6 +40,7 @@ export type GuardrailRunSummary = {
   promptStrategy: string;
   categories: string[];
   warnings: string[];
+  metadata: Record<string, unknown>;
 };
 
 export type GuardrailRunFinding = {
@@ -74,6 +92,81 @@ type GuardrailFindingRow = {
   explanation: string | null;
 };
 
+const schemaMissingMessage =
+  "Run history is not initialized. Apply `supabase/schema.sql` to your Supabase project, then retry.";
+
+function toErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+
+    if (typeof message === "string") {
+      return message;
+    }
+  }
+
+  if (error && typeof error === "object") {
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return "Run history is unavailable.";
+    }
+  }
+
+  return String(error);
+}
+
+export function normalizeRunHistoryError(error: unknown): RunHistoryError {
+  if (error instanceof RunHistoryError) {
+    return error;
+  }
+
+  const message = toErrorMessage(error);
+  const diagnosticText =
+    error && typeof error === "object" ? `${message} ${toErrorMessage(error)}` : message;
+  const lowerMessage = diagnosticText.toLowerCase();
+
+  if (
+    lowerMessage.includes("supabase persistence is not configured") ||
+    lowerMessage.includes("next_public_supabase_url") ||
+    lowerMessage.includes("supabase_service_role_key")
+  ) {
+    return new RunHistoryError(
+      "Supabase persistence is not configured. Add NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to `.env.local`.",
+      "SUPABASE_NOT_CONFIGURED"
+    );
+  }
+
+  if (
+    (lowerMessage.includes("guardrail_runs") ||
+      lowerMessage.includes("guardrail_findings")) &&
+    (lowerMessage.includes("schema cache") ||
+      lowerMessage.includes("does not exist") ||
+      lowerMessage.includes("could not find the table"))
+  ) {
+    return new RunHistoryError(
+      schemaMissingMessage,
+      "RUN_HISTORY_SCHEMA_MISSING"
+    );
+  }
+
+  return new RunHistoryError(
+    message || "Run history is unavailable.",
+    "RUN_HISTORY_UNAVAILABLE"
+  );
+}
+
+function getRunHistoryClient() {
+  try {
+    return getSupabaseAdmin();
+  } catch (error) {
+    throw normalizeRunHistoryError(error);
+  }
+}
+
 function toSummary(row: GuardrailRunRow): GuardrailRunSummary {
   return {
     id: row.id,
@@ -89,12 +182,22 @@ function toSummary(row: GuardrailRunRow): GuardrailRunSummary {
     modelUsed: row.model_used,
     promptStrategy: row.prompt_strategy,
     categories: row.categories ?? [],
-    warnings: row.warnings ?? []
+    warnings: row.warnings ?? [],
+    metadata: row.metadata ?? {}
   };
 }
 
-export async function saveGuardrailRun(result: SanitizeResult): Promise<string> {
-  const supabase = getSupabaseAdmin();
+function compactMetadata(metadata: Record<string, unknown>) {
+  return Object.fromEntries(
+    Object.entries(metadata).filter(([, value]) => value !== undefined)
+  );
+}
+
+export async function saveGuardrailRun(
+  result: SanitizeResult,
+  metadata: Record<string, unknown> = {}
+): Promise<string> {
+  const supabase = getRunHistoryClient();
   const { data, error } = await supabase
     .from("guardrail_runs")
     .insert({
@@ -114,16 +217,18 @@ export async function saveGuardrailRun(result: SanitizeResult): Promise<string> 
       reason: result.reason,
       categories: result.categories,
       warnings: result.warnings,
-      metadata: {
-        phase: "phase_3",
-        persistedBy: "api_sanitize"
-      }
+      metadata: compactMetadata({
+        phase: "phase_4",
+        ingestion_method: "direct_api",
+        persisted_by: "guardrail_pipeline",
+        ...metadata
+      })
     })
     .select("id")
     .single();
 
   if (error) {
-    throw new Error(error.message);
+    throw normalizeRunHistoryError(error);
   }
 
   const runId = data.id as string;
@@ -150,17 +255,17 @@ export async function saveGuardrailRun(result: SanitizeResult): Promise<string> 
 
 export async function listGuardrailRuns(limit = 25): Promise<GuardrailRunSummary[]> {
   const normalizedLimit = Math.max(1, Math.min(limit, 100));
-  const supabase = getSupabaseAdmin();
+  const supabase = getRunHistoryClient();
   const { data, error } = await supabase
     .from("guardrail_runs")
     .select(
-      "id, created_at, source_type, user_task, contains_injection, removed, verdict, risk_level, risk_score, provider, model_used, prompt_strategy, categories, warnings"
+      "id, created_at, source_type, user_task, contains_injection, removed, verdict, risk_level, risk_score, provider, model_used, prompt_strategy, categories, warnings, metadata"
     )
     .order("created_at", { ascending: false })
     .limit(normalizedLimit);
 
   if (error) {
-    throw new Error(error.message);
+    throw normalizeRunHistoryError(error);
   }
 
   return ((data ?? []) as GuardrailRunRow[]).map(toSummary);
@@ -169,7 +274,7 @@ export async function listGuardrailRuns(limit = 25): Promise<GuardrailRunSummary
 export async function getGuardrailRun(
   id: string
 ): Promise<GuardrailRunDetail | null> {
-  const supabase = getSupabaseAdmin();
+  const supabase = getRunHistoryClient();
   const { data, error } = await supabase
     .from("guardrail_runs")
     .select("*")
@@ -181,7 +286,7 @@ export async function getGuardrailRun(
       return null;
     }
 
-    throw new Error(error.message);
+    throw normalizeRunHistoryError(error);
   }
 
   const { data: findingsData, error: findingsError } = await supabase
@@ -191,7 +296,7 @@ export async function getGuardrailRun(
     .order("created_at", { ascending: true });
 
   if (findingsError) {
-    throw new Error(findingsError.message);
+    throw normalizeRunHistoryError(findingsError);
   }
 
   const row = data as GuardrailRunRow;

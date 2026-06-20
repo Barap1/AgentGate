@@ -264,7 +264,7 @@ export function createOpenRouterProvider(): GuardrailProvider {
 
       const primaryModel = getEnv(
         "OPENROUTER_MODEL",
-        "nvidia/nemotron-3-super:free"
+        "qwen/qwen3-next-80b-a3b-instruct:free"
       )!;
       const modelsToTry = [primaryModel, ...parseFallbackModels()];
       const siteUrl = getEnv("OPENROUTER_SITE_URL", "http://localhost:3000")!;
