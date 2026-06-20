@@ -50,4 +50,6 @@ export interface SanitizeResult {
   reason: string;
   categories: string[];
   warnings: string[];
+  runId?: string | null;
+  persisted?: boolean;
 }

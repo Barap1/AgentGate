@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 type AppHeaderProps = {
-  active?: "scanner" | "docs";
+  active?: "scanner" | "runs" | "docs";
 };
 
 export function AppHeader({ active = "scanner" }: AppHeaderProps) {
@@ -19,6 +19,9 @@ export function AppHeader({ active = "scanner" }: AppHeaderProps) {
       <nav className="nav-links" aria-label="Primary navigation">
         <Link className={active === "scanner" ? "nav-link active" : "nav-link"} href="/">
           Scanner
+        </Link>
+        <Link className={active === "runs" ? "nav-link active" : "nav-link"} href="/runs">
+          Runs
         </Link>
         <Link className={active === "docs" ? "nav-link active" : "nav-link"} href="/docs">
           API Docs

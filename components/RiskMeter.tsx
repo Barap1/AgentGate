@@ -11,7 +11,7 @@ export function RiskMeter({ score, level }: RiskMeterProps) {
       <div className="risk-meter-header">
         <span>Risk</span>
         <strong>
-          {level} · {score}/100
+          {level} - {score}/100
         </strong>
       </div>
       <div className="risk-track" aria-hidden="true">

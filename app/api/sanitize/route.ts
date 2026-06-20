@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { saveGuardrailRun } from "@/lib/db/runs";
 import { sanitizeContent } from "@/lib/guardrail/sanitize";
 import {
   validateSanitizeRequest,
@@ -57,7 +58,27 @@ export async function POST(request: Request) {
     const sanitizeRequest = validateSanitizeRequest(body);
     const result = await sanitizeContent(sanitizeRequest);
 
-    return NextResponse.json(result);
+    try {
+      const runId = await saveGuardrailRun(result);
+
+      return NextResponse.json({
+        ...result,
+        runId,
+        persisted: true
+      });
+    } catch (persistenceError) {
+      console.warn("Failed to persist guardrail run", persistenceError);
+
+      return NextResponse.json({
+        ...result,
+        runId: null,
+        persisted: false,
+        warnings: [
+          ...result.warnings,
+          "Persistence is not configured; result was not saved."
+        ]
+      });
+    }
   } catch (error) {
     if (error instanceof ValidationError) {
       return NextResponse.json(

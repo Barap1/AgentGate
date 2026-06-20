@@ -30,6 +30,7 @@ Included:
 - Basic risk scoring and verdict logic.
 - Polished local scanner UI for manual testing.
 - Developer API docs at `/docs`.
+- Supabase-backed run history and saved run detail pages.
 - Safe validation and error responses.
 
 Not included yet:
@@ -149,6 +150,58 @@ The local interface now includes:
 - Extracted injection, removed content, sanitized content, original content, and category sections.
 - Copy buttons for sanitized content and docs examples.
 - Responsive layout for narrower screens.
+
+## Phase 3 Persistence
+
+Phase 3 stores local/demo guardrail runs in Supabase. After a check completes,
+the API attempts to save the normalized result to `guardrail_runs` and category
+findings to `guardrail_findings`.
+
+Pages and endpoints:
+
+- `/runs`: recent saved guardrail runs.
+- `/runs/:id`: detail page for one saved run.
+- `GET /api/runs`: latest runs as JSON.
+- `GET /api/runs/:id`: one run as JSON.
+
+Required Supabase environment variables:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+```
+
+The service role key is used only in server route handlers and server
+components. Do not expose it to the browser and do not commit `.env.local`.
+
+### Apply the Schema
+
+The full schema is versioned at `supabase/schema.sql`.
+
+If Supabase MCP is available in Codex, apply that SQL to the `agent gate`
+project. Otherwise:
+
+1. Open the Supabase dashboard.
+2. Go to SQL Editor.
+3. Paste the contents of `supabase/schema.sql`.
+4. Run it once.
+
+The schema enables RLS and intentionally adds no public `anon` or
+`authenticated` policies. Phase 3 uses server-side service-role access for a
+single-user/local-demo history. Auth and per-user RLS policies are future work.
+
+### Test Persistence
+
+1. Run `npm run dev`.
+2. Run a guardrail check from `/`.
+3. Confirm the result says `Saved run`.
+4. Open `/runs`.
+5. Open the saved run detail page.
+6. Check `GET /api/runs` and `GET /api/runs/:id`.
+
+If Supabase is not configured, `/api/sanitize` still returns the guardrail
+result with a persistence warning.
 
 Screenshot placeholders:
 

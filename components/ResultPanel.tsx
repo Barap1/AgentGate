@@ -3,6 +3,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { RiskMeter } from "@/components/RiskMeter";
 import { VerdictBadge } from "@/components/VerdictBadge";
 import type { SanitizeResult } from "@/lib/guardrail/types";
+import Link from "next/link";
 
 type ResultPanelProps = {
   result: SanitizeResult | null;
@@ -80,6 +81,18 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
             <dd>{result.modelUsed}</dd>
           </div>
         </dl>
+
+        {result.persisted && result.runId ? (
+          <div className="saved-run-callout">
+            <span>Saved run</span>
+            <Link href={`/runs/${result.runId}`}>Open saved result</Link>
+          </div>
+        ) : result.persisted === false ? (
+          <div className="saved-run-callout muted">
+            <span>Run not saved</span>
+            <p>Configure Supabase to enable history.</p>
+          </div>
+        ) : null}
       </section>
 
       <section className="result-section">
