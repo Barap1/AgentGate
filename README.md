@@ -28,7 +28,8 @@ Included:
 - Strict JSON parsing for model output.
 - Fuzzy removal of extracted injected prompts.
 - Basic risk scoring and verdict logic.
-- Local demo UI for manual testing.
+- Polished local scanner UI for manual testing.
+- Developer API docs at `/docs`.
 - Safe validation and error responses.
 
 Not included yet:
@@ -127,12 +128,33 @@ npm run dev
 
 Then visit [http://localhost:3000](http://localhost:3000).
 
+The main scanner is available at `/`. API documentation is available at
+[/docs](http://localhost:3000/docs).
+
 Quality checks:
 
 ```bash
 npm run lint
 npm run build
 ```
+
+## Phase 2 UI
+
+The local interface now includes:
+
+- A two-column scanner layout with trusted task and untrusted content inputs.
+- Benign and malicious sample loaders.
+- Inline validation and character counts.
+- A decision summary with verdict, risk level, risk score, provider, model, and injection status.
+- Extracted injection, removed content, sanitized content, original content, and category sections.
+- Copy buttons for sanitized content and docs examples.
+- Responsive layout for narrower screens.
+
+Screenshot placeholders:
+
+- `docs/screenshots/scanner-empty.png`: scanner before a check is run.
+- `docs/screenshots/scanner-result.png`: scanner after a malicious example is sanitized.
+- `docs/screenshots/api-docs.png`: developer docs page.
 
 ## API Example
 
@@ -171,6 +193,41 @@ Successful responses return a `SanitizeResult`:
 ```
 
 If no usable provider key is configured, the API returns a clear `ERROR` response. Missing OpenRouter or Gemini keys also produce provider-specific errors when that provider is selected.
+
+## Switching Providers
+
+Use OpenRouter:
+
+```env
+LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=your_key_here
+OPENROUTER_MODEL=nvidia/nemotron-3-super:free
+OPENROUTER_FALLBACK_MODELS=
+OPENROUTER_SITE_URL=http://localhost:3000
+OPENROUTER_APP_NAME=AgentGate
+```
+
+Use Gemini:
+
+```env
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=your_key_here
+GEMINI_MODEL=gemini-2.5-flash-lite
+GEMINI_FALLBACK_MODEL=
+```
+
+If `LLM_PROVIDER` is missing or invalid, AgentGate uses OpenRouter when
+`OPENROUTER_API_KEY` exists, otherwise Gemini when `GEMINI_API_KEY` exists.
+
+## Troubleshooting Rate Limits
+
+Free provider tiers may return quota, rate, or capacity errors. When that happens:
+
+- Wait and retry.
+- Reduce the untrusted content size.
+- Switch to another free model.
+- Add comma-separated OpenRouter fallbacks in `OPENROUTER_FALLBACK_MODELS`.
+- Switch providers if you have another key configured.
 
 ## Limitations
 

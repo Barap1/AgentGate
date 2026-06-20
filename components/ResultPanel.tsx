@@ -1,4 +1,7 @@
-import { CircleAlert, FileSearch, ShieldCheck } from "lucide-react";
+import { CodeBlock } from "@/components/CodeBlock";
+import { EmptyState } from "@/components/EmptyState";
+import { RiskMeter } from "@/components/RiskMeter";
+import { VerdictBadge } from "@/components/VerdictBadge";
 import type { SanitizeResult } from "@/lib/guardrail/types";
 
 type ResultPanelProps = {
@@ -6,18 +9,23 @@ type ResultPanelProps = {
   error: string | null;
 };
 
-function classFor(value: string) {
-  return value.toLowerCase();
+function formatBoolean(value: boolean) {
+  return value ? "Yes" : "No";
 }
 
 export function ResultPanel({ result, error }: ResultPanelProps) {
   if (error) {
     return (
       <aside className="panel result-panel" aria-live="polite">
+        <div className="panel-heading compact">
+          <div>
+            <p className="panel-kicker">Result</p>
+            <h2>Request failed</h2>
+          </div>
+        </div>
         <div className="error-box">
-          <strong>Request failed</strong>
-          <br />
-          {error}
+          <strong>What happened</strong>
+          <p>{error}</p>
         </div>
       </aside>
     );
@@ -26,79 +34,93 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
   if (!result) {
     return (
       <aside className="panel result-panel" aria-live="polite">
-        <div className="empty-state">
-          <div>
-            <FileSearch size={36} aria-hidden="true" />
-            <h2>No guardrail result yet</h2>
-            <p>
-              Submit the sample input to see verdict, risk, extracted injection,
-              sanitized content, model metadata, and warnings.
-            </p>
-          </div>
-        </div>
+        <EmptyState
+          title="Run a check to see the guardrail decision."
+          body="The result will show the verdict, extracted injection, sanitized content, provider metadata, and categories."
+        />
       </aside>
     );
   }
 
+  const removedContent =
+    result.removed && result.extractedInjection
+      ? result.extractedInjection
+      : result.removed
+        ? "Content was removed, but the model did not return a separate extracted span."
+        : "No content removed.";
+
   return (
     <aside className="panel result-panel" aria-live="polite">
-      <div className="result-header">
-        <div className="result-title">
-          {result.verdict === "ALLOW" ? (
-            <ShieldCheck size={26} aria-hidden="true" />
-          ) : (
-            <CircleAlert size={26} aria-hidden="true" />
-          )}
+      <section className="decision-summary" aria-labelledby="decision-title">
+        <div className="summary-topline">
           <div>
-            <h2>Guardrail result</h2>
-            <p>
-              {result.provider} / {result.modelUsed}
-            </p>
+            <p className="panel-kicker">Guardrail decision</p>
+            <h2 id="decision-title">Review result</h2>
           </div>
+          <VerdictBadge verdict={result.verdict} />
         </div>
-        <span className={`pill ${classFor(result.verdict)}`}>
-          {result.verdict}
-        </span>
-      </div>
 
-      <div className="stat-grid">
-        <div className="stat">
-          <span>Risk</span>
-          <strong>
-            {result.riskScore}/100{" "}
-            <span className={`pill ${classFor(result.riskLevel)}`}>
-              {result.riskLevel}
-            </span>
-          </strong>
-        </div>
-        <div className="stat">
-          <span>Injection</span>
-          <strong>{result.containsInjection ? "Detected" : "No"}</strong>
-        </div>
-        <div className="stat">
-          <span>Removed</span>
-          <strong>{result.removed ? "Yes" : "No"}</strong>
-        </div>
-      </div>
+        <RiskMeter score={result.riskScore} level={result.riskLevel} />
 
-      <div className="result-section">
-        <h3>Extracted injected prompt</h3>
-        <pre className="content-box">
-          {result.extractedInjection ?? "None reported"}
-        </pre>
-      </div>
+        <dl className="metadata-grid">
+          <div>
+            <dt>Risk level</dt>
+            <dd>{result.riskLevel}</dd>
+          </div>
+          <div>
+            <dt>Contains injection</dt>
+            <dd>{formatBoolean(result.containsInjection)}</dd>
+          </div>
+          <div>
+            <dt>Provider</dt>
+            <dd>{result.provider}</dd>
+          </div>
+          <div>
+            <dt>Model</dt>
+            <dd>{result.modelUsed}</dd>
+          </div>
+        </dl>
+      </section>
 
-      <div className="result-section">
-        <h3>Sanitized content</h3>
-        <pre className="content-box">{result.sanitizedContent}</pre>
-      </div>
-
-      <div className="result-section">
+      <section className="result-section">
         <h3>Reason</h3>
         <p className="reason">{result.reason}</p>
-      </div>
+        {result.warnings.length > 0 ? (
+          <ul className="warnings" aria-label="Warnings">
+            {result.warnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
 
-      <div className="result-section">
+      <section className="result-section">
+        <h3>Extracted injection</h3>
+        <CodeBlock
+          value={result.extractedInjection ?? ""}
+          emptyText="No injected instruction detected."
+        />
+      </section>
+
+      <section className="result-section">
+        <div className="section-title-row">
+          <h3>Sanitized content</h3>
+          <span>Passed to agent</span>
+        </div>
+        <CodeBlock value={result.sanitizedContent} copyable />
+      </section>
+
+      <section className="result-section">
+        <h3>Removed content</h3>
+        <CodeBlock value={removedContent} />
+      </section>
+
+      <details className="original-details">
+        <summary>Original content</summary>
+        <CodeBlock value={result.originalContent} />
+      </details>
+
+      <section className="result-section">
         <h3>Categories</h3>
         <div className="tags">
           {result.categories.length > 0 ? (
@@ -111,18 +133,7 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
             <span className="tag">none</span>
           )}
         </div>
-      </div>
-
-      {result.warnings.length > 0 && (
-        <div className="result-section">
-          <h3>Warnings</h3>
-          <ul className="warnings">
-            {result.warnings.map((warning) => (
-              <li key={warning}>{warning}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+      </section>
     </aside>
   );
 }

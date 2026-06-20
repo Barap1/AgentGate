@@ -1,24 +1,33 @@
+import { AppHeader } from "@/components/AppHeader";
 import { SanitizeForm } from "@/components/SanitizeForm";
+import { getMaxInputChars } from "@/lib/utils/validation";
 
 export default function Home() {
   return (
-    <main className="shell">
-      <section className="intro">
+    <main className="page-shell">
+      <AppHeader active="scanner" />
+
+      <section className="scanner-intro" aria-labelledby="scanner-title">
         <div>
-          <p className="eyebrow">AgentGate Phase 1</p>
-          <h1>Prompt-injection sanitization gateway</h1>
-          <p className="lede">
-            Test untrusted agent inputs against a guardrail LLM, extract injected
-            instructions, remove obvious matches, and inspect the resulting risk
-            verdict before data reaches a backend agent.
+          <p className="section-kicker">Guardrail scanner</p>
+          <h1 id="scanner-title">Inspect untrusted content before an agent reads it.</h1>
+          <p>
+            AgentGate checks retrieved text for injected instructions, extracts
+            the suspect span, removes confident matches, and returns the content
+            that would be passed to the agent.
           </p>
         </div>
-        <div className="demo-notice" role="note">
-          <strong>Demo notice:</strong> do not submit real secrets,
-          credentials, private customer data, or sensitive company content.
-        </div>
+
+        <ol className="workflow-strip" aria-label="AgentGate workflow">
+          <li>Untrusted content enters</li>
+          <li>Guardrail model checks it</li>
+          <li>Injected instruction is extracted</li>
+          <li>Fuzzy removal sanitizes it</li>
+          <li>Safe content is returned</li>
+        </ol>
       </section>
-      <SanitizeForm />
+
+      <SanitizeForm maxInputChars={getMaxInputChars()} />
     </main>
   );
 }

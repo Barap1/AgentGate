@@ -24,11 +24,11 @@ const promptStrategies = new Set<PromptStrategy>([
   "strict_extraction"
 ]);
 
-function getMaxInputChars() {
+export function getMaxInputChars() {
   const rawValue = process.env.MAX_INPUT_CHARS;
-  const parsed = rawValue ? Number.parseInt(rawValue, 10) : 20000;
+  const parsed = rawValue ? Number.parseInt(rawValue, 10) : 5000;
 
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 20000;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 5000;
 }
 
 function requireString(
