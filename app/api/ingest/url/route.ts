@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { clientErrorMessage } from "@/lib/guardrail/errors";
 import { runGuardrailPipeline } from "@/lib/guardrail/pipeline";
 import { fetchPublicUrlText } from "@/lib/ingest/urlFetch";
 import {
@@ -7,29 +6,9 @@ import {
   requiredString,
   requireJsonObject
 } from "@/lib/ingest/validation";
-import { ValidationError } from "@/lib/utils/validation";
+import { errorResponse } from "@/lib/utils/api";
 
 export const runtime = "nodejs";
-
-function errorResponse(error: unknown) {
-  if (error instanceof ValidationError) {
-    return NextResponse.json(
-      {
-        verdict: "ERROR",
-        error: error.message
-      },
-      { status: error.status }
-    );
-  }
-
-  return NextResponse.json(
-    {
-      verdict: "ERROR",
-      error: clientErrorMessage(error)
-    },
-    { status: 500 }
-  );
-}
 
 export async function POST(request: Request) {
   let body: unknown;

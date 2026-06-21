@@ -9,11 +9,6 @@ import type {
 } from "@/lib/guardrail/providers/types";
 import type { GuardrailModelResult } from "@/lib/guardrail/types";
 
-function getEnv(name: string, fallback?: string) {
-  const value = process.env[name]?.trim();
-  return value && value.length > 0 ? value : fallback;
-}
-
 function isFallbackEligible(error: unknown) {
   const maybeStatus = (error as { status?: number; code?: number }) ?? {};
   const status = maybeStatus.status ?? maybeStatus.code;
@@ -96,7 +91,7 @@ async function generateWithModel({
 export function createGeminiProvider(): GuardrailProvider {
   return {
     async check(input): Promise<GuardrailProviderResponse> {
-      const apiKey = getEnv("GEMINI_API_KEY");
+      const apiKey = process.env.GEMINI_API_KEY?.trim();
 
       if (!apiKey) {
         throw new Error(
@@ -104,8 +99,9 @@ export function createGeminiProvider(): GuardrailProvider {
         );
       }
 
-      const primaryModel = getEnv("GEMINI_MODEL", "gemini-2.5-flash-lite")!;
-      const fallbackModel = getEnv("GEMINI_FALLBACK_MODEL");
+      const primaryModel =
+        process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash-lite";
+      const fallbackModel = process.env.GEMINI_FALLBACK_MODEL?.trim();
       const modelsToTry = [primaryModel, ...(fallbackModel ? [fallbackModel] : [])];
       const ai = new GoogleGenAI({ apiKey });
       const prompt = `${input.systemPrompt}

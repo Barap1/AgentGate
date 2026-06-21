@@ -1,5 +1,4 @@
 import { CodeBlock } from "@/components/CodeBlock";
-import { EmptyState } from "@/components/EmptyState";
 import { RiskMeter } from "@/components/RiskMeter";
 import { VerdictBadge } from "@/components/VerdictBadge";
 import type { SanitizeResult } from "@/lib/guardrail/types";
@@ -76,10 +75,14 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
   if (!result) {
     return (
       <aside className="panel result-panel" aria-live="polite">
-        <EmptyState
-          title="Run a check to see the guardrail decision."
-          body="The result will show the verdict, extracted injection, sanitized content, provider metadata, and categories."
-        />
+        <div className="empty-state">
+          <div className="empty-state-rule" aria-hidden="true" />
+          <h2>Run a check to see the guardrail decision.</h2>
+          <p>
+            The result will show the verdict, extracted injection, sanitized
+            content, provider metadata, and categories.
+          </p>
+        </div>
       </aside>
     );
   }

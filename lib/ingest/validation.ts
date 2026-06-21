@@ -1,18 +1,15 @@
 import type { SourceType } from "@/lib/guardrail/types";
-import { getMaxInputChars, ValidationError } from "@/lib/utils/validation";
+import {
+  getMaxInputChars,
+  requiredString,
+  sourceTypes,
+  ValidationError
+} from "@/lib/utils/validation";
 
 export const DEFAULT_INGEST_USER_TASK =
   "Process this untrusted content according to the agent's task.";
 
-const sourceTypes = new Set<SourceType>([
-  "support_ticket",
-  "email",
-  "slack_message",
-  "webpage",
-  "document",
-  "tool_output",
-  "manual_test"
-]);
+export { requiredString };
 
 export function requireJsonObject(body: unknown) {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
@@ -20,22 +17,6 @@ export function requireJsonObject(body: unknown) {
   }
 
   return body as Record<string, unknown>;
-}
-
-export function requiredString(
-  value: unknown,
-  field: string,
-  maxLength: number
-) {
-  if (typeof value !== "string" || value.trim().length === 0) {
-    throw new ValidationError(`${field} is required.`);
-  }
-
-  if (value.length > maxLength) {
-    throw new ValidationError(`${field} must be ${maxLength} characters or fewer.`);
-  }
-
-  return value;
 }
 
 export function optionalString(

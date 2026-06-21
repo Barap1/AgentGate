@@ -1,5 +1,6 @@
 import "server-only";
 
+import { extname } from "node:path";
 import type { SourceType } from "@/lib/guardrail/types";
 import { getMaxInputChars, ValidationError } from "@/lib/utils/validation";
 import { getMaxUploadBytes } from "@/lib/ingest/limits";
@@ -34,12 +35,6 @@ export type ParsedTextFile = {
   sourceType: SourceType;
 };
 
-function extensionFor(filename: string) {
-  const index = filename.lastIndexOf(".");
-
-  return index >= 0 ? filename.slice(index).toLowerCase() : "";
-}
-
 function assertTextLike(content: string) {
   if (content.includes("\u0000")) {
     throw new ValidationError("Uploaded file appears to be binary.");
@@ -54,7 +49,7 @@ function assertTextLike(content: string) {
 }
 
 function assertAllowedFile(file: File) {
-  const extension = extensionFor(file.name);
+  const extension = extname(file.name).toLowerCase();
 
   if (!allowedExtensions.has(extension)) {
     throw new ValidationError(

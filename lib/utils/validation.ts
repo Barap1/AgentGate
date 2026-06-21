@@ -8,7 +8,7 @@ export class ValidationError extends Error {
   status = 400;
 }
 
-const sourceTypes = new Set<SourceType>([
+export const sourceTypes = new Set<SourceType>([
   "support_ticket",
   "email",
   "slack_message",
@@ -31,7 +31,7 @@ export function getMaxInputChars() {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 5000;
 }
 
-function requireString(
+export function requiredString(
   value: unknown,
   field: string,
   maxLength: number
@@ -53,8 +53,8 @@ export function validateSanitizeRequest(body: unknown): SanitizeRequest {
   }
 
   const input = body as Record<string, unknown>;
-  const userTask = requireString(input.userTask, "userTask", 2000);
-  const content = requireString(input.content, "content", getMaxInputChars());
+  const userTask = requiredString(input.userTask, "userTask", 2000);
+  const content = requiredString(input.content, "content", getMaxInputChars());
   const sourceType =
     typeof input.sourceType === "string" && sourceTypes.has(input.sourceType as SourceType)
       ? (input.sourceType as SourceType)

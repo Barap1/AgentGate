@@ -4,6 +4,7 @@ node_modules/
 .env
 .env*.local
 .next-dev*.log
+.codex-dev-server*.log
 out/
 dist/
 npm-debug.log*
