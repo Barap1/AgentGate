@@ -14,3 +14,4 @@ pnpm-debug.log*
 secrets.txt
 agents.md
 .codex-dev-server.log
+.codex-dev-server.err.log
