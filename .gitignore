@@ -11,4 +11,4 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .codex/
-.codex/skills/ui-ux-pro-max
+secrets.txt

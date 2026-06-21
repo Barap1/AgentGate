@@ -183,21 +183,23 @@ export default async function RunDetailPage({
             <p className="reason">{run.reason ?? "No reason stored."}</p>
           </section>
 
-          <section className="result-section">
-            <h3>Extracted injection</h3>
-            <CodeBlock
-              value={run.extractedInjection ?? ""}
-              emptyText="No injected instruction detected."
-            />
-          </section>
+          <div className="result-compare">
+            <section className="result-section">
+              <h3>Extracted injection</h3>
+              <CodeBlock
+                value={run.extractedInjection ?? ""}
+                emptyText="No injected instruction detected."
+              />
+            </section>
 
-          <section className="result-section">
-            <div className="section-title-row">
-              <h3>{output.title}</h3>
-              <span>{output.helper}</span>
-            </div>
-            <CodeBlock value={run.sanitizedContent} copyable />
-          </section>
+            <section className="result-section">
+              <div className="section-title-row">
+                <h3>{output.title}</h3>
+                <span>{output.helper}</span>
+              </div>
+              <CodeBlock value={run.sanitizedContent} copyable />
+            </section>
+          </div>
 
           <section className="result-section">
             <h3>Removed content</h3>

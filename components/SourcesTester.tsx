@@ -244,7 +244,7 @@ export function SourcesTester() {
 
   return (
     <section className="sources-grid" aria-label="Ingestion methods">
-      <article className="panel source-card">
+      <article className="panel source-card source-card-compact">
         <div className="panel-heading compact">
           <div>
             <p className="panel-kicker">Direct API</p>
@@ -338,6 +338,7 @@ export function SourcesTester() {
             />
           </div>
           <button
+            aria-busy={webhookState.loading}
             className="button primary-button"
             type="submit"
             disabled={webhookDisabled}
@@ -376,7 +377,12 @@ export function SourcesTester() {
               onChange={(event) => setUrlTask(event.target.value)}
             />
           </div>
-          <button className="button primary-button" type="submit" disabled={urlDisabled}>
+          <button
+            aria-busy={urlState.loading}
+            className="button primary-button"
+            type="submit"
+            disabled={urlDisabled}
+          >
             {urlState.loading ? "Fetching URL..." : "Fetch and check"}
           </button>
         </form>
@@ -411,7 +417,12 @@ export function SourcesTester() {
               onChange={(event) => setFile(event.target.files?.[0] ?? null)}
             />
           </div>
-          <button className="button primary-button" type="submit" disabled={fileDisabled}>
+          <button
+            aria-busy={fileState.loading}
+            className="button primary-button"
+            type="submit"
+            disabled={fileDisabled}
+          >
             {fileState.loading ? "Uploading file..." : "Upload and check"}
           </button>
         </form>

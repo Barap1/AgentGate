@@ -95,11 +95,14 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
 
   return (
     <aside className="panel result-panel" aria-live="polite">
-      <section className="decision-summary" aria-labelledby="decision-title">
+      <section
+        className={`decision-summary ${result.verdict.toLowerCase()}`}
+        aria-labelledby="decision-title"
+      >
         <div className="summary-topline">
           <div>
             <p className="panel-kicker">Guardrail decision</p>
-            <h2 id="decision-title">Review result</h2>
+            <h2 id="decision-title">{output.title}</h2>
           </div>
           <VerdictBadge verdict={result.verdict} />
         </div>
@@ -154,21 +157,23 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
         ) : null}
       </section>
 
-      <section className="result-section">
-        <h3>Extracted injection</h3>
-        <CodeBlock
-          value={result.extractedInjection ?? ""}
-          emptyText="No injected instruction detected."
-        />
-      </section>
+      <div className="result-compare">
+        <section className="result-section">
+          <h3>Extracted injection</h3>
+          <CodeBlock
+            value={result.extractedInjection ?? ""}
+            emptyText="No injected instruction detected."
+          />
+        </section>
 
-      <section className="result-section">
-        <div className="section-title-row">
-          <h3>{output.title}</h3>
-          <span>{output.helper}</span>
-        </div>
-        <CodeBlock value={result.sanitizedContent} copyable />
-      </section>
+        <section className="result-section">
+          <div className="section-title-row">
+            <h3>{output.title}</h3>
+            <span>{output.helper}</span>
+          </div>
+          <CodeBlock value={result.sanitizedContent} copyable />
+        </section>
+      </div>
 
       <section className="result-section">
         <h3>Removed content</h3>

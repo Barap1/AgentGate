@@ -57,7 +57,9 @@ function RunsTable({ runs }: { runs: GuardrailRunSummary[] }) {
           {runs.map((run) => (
             <tr key={run.id}>
               <td>
-                <Link href={`/runs/${run.id}`}>{formatDate(run.createdAt)}</Link>
+                <Link className="table-primary-link" href={`/runs/${run.id}`}>
+                  {formatDate(run.createdAt)}
+                </Link>
               </td>
               <td>
                 <VerdictBadge verdict={run.verdict} />
@@ -112,6 +114,12 @@ export default async function RunsPage() {
       </section>
 
       <section className="panel history-panel">
+        {!error && runs.length > 0 ? (
+          <div className="history-toolbar">
+            <strong>{runs.length} recent runs</strong>
+            <span>Newest first</span>
+          </div>
+        ) : null}
         {error ? (
           <div className="history-empty">
             <h2>Run history unavailable.</h2>

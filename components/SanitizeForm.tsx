@@ -162,12 +162,16 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
   }
 
   return (
-    <section className="workspace" aria-label="AgentGate scanner workspace">
+    <section
+      className="workspace"
+      id="scanner-workspace"
+      aria-label="AgentGate scanner workspace"
+    >
       <form className="panel input-panel" onSubmit={handleSubmit} noValidate>
         <div className="panel-heading">
           <div>
-            <p className="panel-kicker">Input</p>
-            <h2>Content to inspect</h2>
+            <p className="panel-kicker">Scan setup</p>
+            <h2>Define the trusted task</h2>
           </div>
           <p className="privacy-note">
             Do not submit real secrets, credentials, customer data, or sensitive
@@ -291,7 +295,12 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
         </div>
 
         <div className="form-actions">
-          <button className="button primary-button" type="submit" disabled={!canSubmit}>
+          <button
+            aria-busy={loading}
+            className="button primary-button"
+            type="submit"
+            disabled={!canSubmit}
+          >
             {loading ? "Checking untrusted content..." : "Run guardrail check"}
           </button>
           <button

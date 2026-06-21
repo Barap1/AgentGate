@@ -16,14 +16,37 @@ export default function Home() {
             the suspect span, removes confident matches, and returns the content
             that would be passed to the agent.
           </p>
+          <div className="hero-actions">
+            <a className="button primary-button" href="#scanner-workspace">
+              Start a scan
+            </a>
+            <a className="button secondary-button" href="/sources">
+              Test sources
+            </a>
+          </div>
         </div>
 
         <ol className="workflow-strip" aria-label="AgentGate workflow">
-          <li>Untrusted content enters</li>
-          <li>Guardrail model checks it</li>
-          <li>Injected instruction is extracted</li>
-          <li>Fuzzy removal sanitizes it</li>
-          <li>Safe content is returned</li>
+          <li>
+            <strong>Capture</strong>
+            <span>Untrusted content enters</span>
+          </li>
+          <li>
+            <strong>Classify</strong>
+            <span>Guardrail model checks it</span>
+          </li>
+          <li>
+            <strong>Extract</strong>
+            <span>Injected instruction is isolated</span>
+          </li>
+          <li>
+            <strong>Sanitize</strong>
+            <span>Confident matches are removed</span>
+          </li>
+          <li>
+            <strong>Return</strong>
+            <span>Safe content is handed back</span>
+          </li>
         </ol>
       </section>
 
