@@ -1,6 +1,7 @@
 import { CodeBlock } from "@/components/CodeBlock";
 import { RiskMeter } from "@/components/RiskMeter";
 import { VerdictBadge } from "@/components/VerdictBadge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { SanitizeResult } from "@/lib/guardrail/types";
 import Link from "next/link";
 
@@ -64,11 +65,13 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
             <h2>Request failed</h2>
           </div>
         </div>
-        <div className="error-box">
-          <strong>What happened</strong>
-          <p>{error}</p>
-          <p>Check provider configuration, reduce input size, or retry the request.</p>
-        </div>
+        <Alert className="error-box" variant="destructive">
+          <AlertTitle>What happened</AlertTitle>
+          <AlertDescription>
+            <p>{error}</p>
+            <p>Check provider configuration, reduce input size, or retry the request.</p>
+          </AlertDescription>
+        </Alert>
       </aside>
     );
   }

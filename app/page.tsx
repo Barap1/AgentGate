@@ -12,42 +12,23 @@ export default function Home() {
         <PageHeader
           label="Guardrail scanner"
           titleId="scanner-title"
-          title="Check untrusted content before it reaches an agent."
+          title="Guard untrusted content before it reaches your agent."
           action={
             <div className="hero-actions">
               <a className="button primary-button" href="#scanner-workspace">
-                Start scan
+                Run a check
               </a>
               <a className="button secondary-button" href="/sources">
-                Test sources
+                Source tests
               </a>
             </div>
           }
         >
           <p>
-            Untrusted content enters, AgentGate checks for injected
-            instructions, then returns sanitized content or blocks the output.
+            Paste a trusted task and untrusted content. AgentGate returns an
+            allow, sanitize, or block decision with the exact output to use.
           </p>
         </PageHeader>
-
-        <ol className="workflow-strip" aria-label="AgentGate workflow">
-          <li>
-            <strong>Untrusted content</strong>
-            <span>Ticket, page, file, email, or tool output</span>
-          </li>
-          <li>
-            <strong>Guardrail check</strong>
-            <span>Classify, score risk, and extract injection</span>
-          </li>
-          <li>
-            <strong>Extraction/removal</strong>
-            <span>Remove confident matches conservatively</span>
-          </li>
-          <li>
-            <strong>Safe output or block</strong>
-            <span>Return sanitized content or stop the handoff</span>
-          </li>
-        </ol>
       </section>
 
       <SanitizeForm maxInputChars={getMaxInputChars()} />

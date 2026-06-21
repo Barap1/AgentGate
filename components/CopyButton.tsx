@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 type CopyButtonProps = {
   value: string;
@@ -22,13 +23,15 @@ export function CopyButton({ value, label = "Copy" }: CopyButtonProps) {
   }
 
   return (
-    <button
+    <Button
       aria-live="polite"
       className="copy-button"
       type="button"
+      variant="outline"
+      size="sm"
       onClick={handleCopy}
     >
       {status === "copied" ? "Copied" : status === "failed" ? "Failed" : label}
-    </button>
+    </Button>
   );
 }

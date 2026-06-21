@@ -161,19 +161,18 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
       <form className="panel input-panel" onSubmit={handleSubmit} noValidate>
         <div className="panel-heading">
           <div>
-            <p className="panel-kicker">Scan setup</p>
-            <h2>Define the trusted task</h2>
+            <p className="panel-kicker">Input</p>
+            <h2>Scan content</h2>
           </div>
           <p className="privacy-note">
-            Do not submit real secrets, credentials, customer data, or sensitive
-            company content.
+            Do not submit secrets, credentials, or sensitive customer content.
           </p>
         </div>
 
         <div className="demo-loader">
           <div>
             <strong>Load demo</strong>
-            <p>Use these examples to test the guardrail without entering real data.</p>
+            <p>Start with a malicious or benign sample.</p>
           </div>
           <select
             aria-label="Load demo example"
@@ -260,7 +259,7 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
           <FieldLabel
             htmlFor="content"
             label="Untrusted content"
-            helper="Data retrieved from a ticket, email, webpage, document, or tool output."
+            helper="Ticket, email, webpage, document, or tool output."
           />
           <textarea
             className="content-input"
@@ -298,7 +297,7 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
             type="submit"
             disabled={loading}
           >
-            {loading ? "Checking untrusted content..." : "Run guardrail check"}
+          {loading ? "Checking untrusted content..." : "Run guardrail check"}
           </button>
           <button
             className="button quiet-button"
@@ -311,7 +310,7 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
         </div>
 
         <p className="technical-note">
-          Server-side provider call. API keys stay in `.env.local`.
+          Provider calls run server-side. API keys stay in `.env.local`.
         </p>
         {loading ? (
           <div className="loading-state" role="status">
