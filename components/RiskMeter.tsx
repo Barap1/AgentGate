@@ -15,7 +15,11 @@ export function RiskMeter({ score, level }: RiskMeterProps) {
         </strong>
       </div>
       <div className="risk-track" aria-hidden="true">
-        <span style={{ width: `${Math.max(0, Math.min(score, 100))}%` }} />
+        <span
+          style={{
+            transform: `scaleX(${Math.max(0, Math.min(score, 100)) / 100})`
+          }}
+        />
       </div>
     </div>
   );

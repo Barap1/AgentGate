@@ -14,6 +14,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <a className="skip-link" href="#main-content">
+          Skip to content
+        </a>
         {children}
         <footer className="app-footer">
           Prototype guardrail gateway. Do not submit sensitive data.

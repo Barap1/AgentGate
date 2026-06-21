@@ -4,7 +4,7 @@ import { getMaxInputChars } from "@/lib/utils/validation";
 
 export default function Home() {
   return (
-    <main className="page-shell">
+    <main className="page-shell" id="main-content">
       <AppHeader active="home" />
 
       <section className="scanner-intro" aria-labelledby="scanner-title">

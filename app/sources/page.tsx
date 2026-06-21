@@ -3,7 +3,7 @@ import { SourcesTester } from "@/components/SourcesTester";
 
 export default function SourcesPage() {
   return (
-    <main className="page-shell sources-shell">
+    <main className="page-shell sources-shell" id="main-content">
       <AppHeader active="sources" />
 
       <section className="sources-hero">

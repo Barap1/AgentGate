@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { FieldLabel } from "@/components/FieldLabel";
 import { RiskMeter } from "@/components/RiskMeter";
@@ -122,19 +122,6 @@ export function SourcesTester() {
   const [fileTask, setFileTask] = useState("Summarize this document.");
   const [file, setFile] = useState<File | null>(null);
 
-  const webhookDisabled = useMemo(
-    () => webhookState.loading || webhookContent.trim().length === 0,
-    [webhookContent, webhookState.loading]
-  );
-  const urlDisabled = useMemo(
-    () => urlState.loading || url.trim().length === 0,
-    [url, urlState.loading]
-  );
-  const fileDisabled = useMemo(
-    () => fileState.loading || !file,
-    [file, fileState.loading]
-  );
-
   function loadWebhookDemo(example: DemoExample) {
     setSelectedWebhookDemoId(example.id);
     setWebhookSourceType(example.sourceType);
@@ -155,6 +142,16 @@ export function SourcesTester() {
 
   async function submitWebhook(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!webhookContent.trim()) {
+      setWebhookState({
+        loading: false,
+        error: "Enter untrusted content to inspect.",
+        result: null
+      });
+      return;
+    }
+
     setWebhookState({ loading: true, error: null, result: null });
 
     try {
@@ -184,6 +181,16 @@ export function SourcesTester() {
 
   async function submitUrl(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!url.trim()) {
+      setUrlState({
+        loading: false,
+        error: "Enter a URL to fetch.",
+        result: null
+      });
+      return;
+    }
+
     setUrlState({ loading: true, error: null, result: null });
 
     try {
@@ -291,6 +298,8 @@ export function SourcesTester() {
               <FieldLabel htmlFor="sourceName" label="Source name" />
               <input
                 id="sourceName"
+                name="sourceName"
+                autoComplete="organization"
                 value={sourceName}
                 onChange={(event) => setSourceName(event.target.value)}
               />
@@ -299,6 +308,8 @@ export function SourcesTester() {
               <FieldLabel htmlFor="externalId" label="External ID" />
               <input
                 id="externalId"
+                name="externalId"
+                autoComplete="off"
                 value={externalId}
                 onChange={(event) => setExternalId(event.target.value)}
               />
@@ -308,6 +319,7 @@ export function SourcesTester() {
             <FieldLabel htmlFor="webhookSourceType" label="Source type" />
             <select
               id="webhookSourceType"
+              name="webhookSourceType"
               value={webhookSourceType}
               onChange={(event) =>
                 setWebhookSourceType(event.target.value as SourceType)
@@ -324,6 +336,8 @@ export function SourcesTester() {
             <FieldLabel htmlFor="webhookTask" label="Trusted task" />
             <textarea
               id="webhookTask"
+              name="webhookTask"
+              autoComplete="off"
               value={webhookTask}
               onChange={(event) => setWebhookTask(event.target.value)}
             />
@@ -333,6 +347,8 @@ export function SourcesTester() {
             <textarea
               className="content-input compact-content"
               id="webhookContent"
+              name="webhookContent"
+              autoComplete="off"
               value={webhookContent}
               onChange={(event) => setWebhookContent(event.target.value)}
             />
@@ -341,9 +357,9 @@ export function SourcesTester() {
             aria-busy={webhookState.loading}
             className="button primary-button"
             type="submit"
-            disabled={webhookDisabled}
+            disabled={webhookState.loading}
           >
-            {webhookState.loading ? "Sending webhook test..." : "Send webhook test"}
+            {webhookState.loading ? "Sending webhook test…" : "Send webhook test"}
           </button>
         </form>
         <ResultSummary state={webhookState} />
@@ -364,15 +380,20 @@ export function SourcesTester() {
             <FieldLabel htmlFor="url" label="URL" />
             <input
               id="url"
+              name="url"
+              type="url"
+              autoComplete="url"
               value={url}
               onChange={(event) => setUrl(event.target.value)}
-              placeholder="https://example.com"
+              placeholder="https://example.com…"
             />
           </div>
           <div className="field">
             <FieldLabel htmlFor="urlTask" label="Trusted task" />
             <textarea
               id="urlTask"
+              name="urlTask"
+              autoComplete="off"
               value={urlTask}
               onChange={(event) => setUrlTask(event.target.value)}
             />
@@ -381,9 +402,9 @@ export function SourcesTester() {
             aria-busy={urlState.loading}
             className="button primary-button"
             type="submit"
-            disabled={urlDisabled}
+            disabled={urlState.loading}
           >
-            {urlState.loading ? "Fetching URL..." : "Fetch and check"}
+            {urlState.loading ? "Fetching URL…" : "Fetch and check"}
           </button>
         </form>
         <ResultSummary state={urlState} />
@@ -404,6 +425,8 @@ export function SourcesTester() {
             <FieldLabel htmlFor="fileTask" label="Trusted task" />
             <textarea
               id="fileTask"
+              name="fileTask"
+              autoComplete="off"
               value={fileTask}
               onChange={(event) => setFileTask(event.target.value)}
             />
@@ -412,6 +435,7 @@ export function SourcesTester() {
             <FieldLabel htmlFor="file" label="File" />
             <input
               id="file"
+              name="file"
               type="file"
               accept=".txt,.md,.html,.htm,.json,.csv,.log,text/*,application/json"
               onChange={(event) => setFile(event.target.files?.[0] ?? null)}
@@ -421,9 +445,9 @@ export function SourcesTester() {
             aria-busy={fileState.loading}
             className="button primary-button"
             type="submit"
-            disabled={fileDisabled}
+            disabled={fileState.loading}
           >
-            {fileState.loading ? "Uploading file..." : "Upload and check"}
+            {fileState.loading ? "Uploading file…" : "Upload and check"}
           </button>
         </form>
         <ResultSummary state={fileState} />

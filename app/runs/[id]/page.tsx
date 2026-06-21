@@ -9,7 +9,7 @@ import { getGuardrailRun } from "@/lib/db/runs";
 export const dynamic = "force-dynamic";
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en", {
+  return new Intl.DateTimeFormat(undefined, {
     dateStyle: "full",
     timeStyle: "long"
   }).format(new Date(value));
@@ -91,7 +91,7 @@ export default async function RunDetailPage({
 
   if (!run) {
     return (
-      <main className="page-shell">
+      <main className="page-shell" id="main-content">
         <AppHeader active="runs" />
         <section className="panel history-empty">
           <h1>Run history unavailable.</h1>
@@ -118,7 +118,7 @@ export default async function RunDetailPage({
         : "No content removed.";
 
   return (
-    <main className="page-shell">
+    <main className="page-shell" id="main-content">
       <AppHeader active="runs" />
 
       <section className="run-detail-header">

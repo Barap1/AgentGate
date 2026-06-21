@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 import { ResultPanel } from "@/components/ResultPanel";
 import { FieldLabel } from "@/components/FieldLabel";
 import {
@@ -61,15 +61,6 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [loading, setLoading] = useState(false);
-
-  const canSubmit = useMemo(
-    () =>
-      userTask.trim().length > 0 &&
-      content.trim().length > 0 &&
-      content.length <= maxInputChars &&
-      !loading,
-    [content, loading, maxInputChars, userTask]
-  );
 
   function validateFields() {
     const nextErrors: FieldErrors = {};
@@ -206,13 +197,15 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
           />
           <textarea
             id="userTask"
+            name="userTask"
+            autoComplete="off"
             value={userTask}
             maxLength={2000}
             onChange={(event) => {
               setUserTask(event.target.value);
               setFieldErrors((current) => ({ ...current, userTask: undefined }));
             }}
-            placeholder="Summarize this support ticket."
+            placeholder="Summarize this support ticket…"
             aria-invalid={Boolean(fieldErrors.userTask)}
             aria-describedby={fieldErrors.userTask ? "userTask-error" : undefined}
           />
@@ -232,6 +225,7 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
             <FieldLabel htmlFor="sourceType" label="Source type" />
             <select
               id="sourceType"
+              name="sourceType"
               value={sourceType}
               onChange={(event) => setSourceType(event.target.value as SourceType)}
             >
@@ -247,6 +241,7 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
             <FieldLabel htmlFor="promptStrategy" label="Prompt strategy" />
             <select
               id="promptStrategy"
+              name="promptStrategy"
               value={promptStrategy}
               onChange={(event) =>
                 setPromptStrategy(event.target.value as PromptStrategy)
@@ -270,13 +265,15 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
           <textarea
             className="content-input"
             id="content"
+            name="content"
+            autoComplete="off"
             value={content}
             maxLength={maxInputChars + 1}
             onChange={(event) => {
               setContent(event.target.value);
               setFieldErrors((current) => ({ ...current, content: undefined }));
             }}
-            placeholder="Paste untrusted content here."
+            placeholder="Paste untrusted content here…"
             aria-invalid={Boolean(fieldErrors.content)}
             aria-describedby={fieldErrors.content ? "content-error" : undefined}
           />
@@ -299,9 +296,9 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
             aria-busy={loading}
             className="button primary-button"
             type="submit"
-            disabled={!canSubmit}
+            disabled={loading}
           >
-            {loading ? "Checking untrusted content..." : "Run guardrail check"}
+            {loading ? "Checking untrusted content…" : "Run guardrail check"}
           </button>
           <button
             className="button quiet-button"

@@ -6,14 +6,14 @@ import { listGuardrailRuns, type GuardrailRunSummary } from "@/lib/db/runs";
 export const dynamic = "force-dynamic";
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en", {
+  return new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
     timeStyle: "short"
   }).format(new Date(value));
 }
 
 function snippet(value: string, length = 82) {
-  return value.length > length ? `${value.slice(0, length).trim()}...` : value;
+  return value.length > length ? `${value.slice(0, length).trim()}…` : value;
 }
 
 function metadataString(
@@ -96,7 +96,7 @@ export default async function RunsPage() {
   }
 
   return (
-    <main className="page-shell">
+    <main className="page-shell" id="main-content">
       <AppHeader active="runs" />
 
       <section className="history-header">

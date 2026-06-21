@@ -17,7 +17,12 @@ export function CopyButton({ value, label = "Copy" }: CopyButtonProps) {
   }
 
   return (
-    <button className="copy-button" type="button" onClick={handleCopy}>
+    <button
+      aria-live="polite"
+      className="copy-button"
+      type="button"
+      onClick={handleCopy}
+    >
       {copied ? "Copied" : label}
     </button>
   );
