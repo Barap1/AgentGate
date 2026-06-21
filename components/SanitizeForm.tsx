@@ -205,7 +205,7 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
               setUserTask(event.target.value);
               setFieldErrors((current) => ({ ...current, userTask: undefined }));
             }}
-            placeholder="Summarize this support ticket…"
+            placeholder="Summarize this support ticket..."
             aria-invalid={Boolean(fieldErrors.userTask)}
             aria-describedby={fieldErrors.userTask ? "userTask-error" : undefined}
           />
@@ -273,7 +273,7 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
               setContent(event.target.value);
               setFieldErrors((current) => ({ ...current, content: undefined }));
             }}
-            placeholder="Paste untrusted content here…"
+            placeholder="Paste untrusted content here..."
             aria-invalid={Boolean(fieldErrors.content)}
             aria-describedby={fieldErrors.content ? "content-error" : undefined}
           />
@@ -298,7 +298,7 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
             type="submit"
             disabled={loading}
           >
-            {loading ? "Checking untrusted content…" : "Run guardrail check"}
+            {loading ? "Checking untrusted content..." : "Run guardrail check"}
           </button>
           <button
             className="button quiet-button"
@@ -313,6 +313,12 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
         <p className="technical-note">
           Server-side provider call. API keys stay in `.env.local`.
         </p>
+        {loading ? (
+          <div className="loading-state" role="status">
+            <span />
+            Checking content. This can take a few seconds.
+          </div>
+        ) : null}
       </form>
 
       <ResultPanel result={result} error={error} />

@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/AppHeader";
+import { PageHeader } from "@/components/PageHeader";
 import { SourcesTester } from "@/components/SourcesTester";
 
 export default function SourcesPage() {
@@ -6,14 +7,15 @@ export default function SourcesPage() {
     <main className="page-shell sources-shell" id="main-content">
       <AppHeader active="sources" />
 
-      <section className="sources-hero">
-        <p className="section-kicker">Sources</p>
-        <h1>Test the ways untrusted content enters AgentGate.</h1>
+      <PageHeader
+        label="Sources"
+        title="Test each untrusted content path before connecting it."
+      >
         <p>
           Use webhook, URL, and file ingestion paths before wiring external
           systems into an agent workflow.
         </p>
-      </section>
+      </PageHeader>
 
       <SourcesTester />
     </main>

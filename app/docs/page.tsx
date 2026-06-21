@@ -1,5 +1,6 @@
 import { AppHeader } from "@/components/AppHeader";
 import { CodeBlock } from "@/components/CodeBlock";
+import { PageHeader } from "@/components/PageHeader";
 
 const apiBaseUrl = "https://agent--gate.vercel.app";
 
@@ -90,19 +91,18 @@ export default function DocsPage() {
     <main className="page-shell docs-shell" id="main-content">
       <AppHeader active="docs" />
 
-      <section className="docs-hero">
-        <p className="section-kicker">API Docs</p>
-        <h1>Use AgentGate as a hosted guardrail endpoint.</h1>
+      <PageHeader label="API Docs" title="Use AgentGate as a guardrail endpoint.">
         <p>
           Send trusted task context and untrusted content to receive a normalized
           guardrail decision, extracted injection, sanitized content, risk score,
           provider metadata, and persistence status.
         </p>
-      </section>
+      </PageHeader>
 
       <div className="docs-layout">
         <aside className="docs-toc" aria-label="Documentation sections">
           <a href="#overview">What it does</a>
+          <a href="#request-shape">Request shape</a>
           <a href="#sanitize">Direct API</a>
           <a href="#webhook">Webhook</a>
           <a href="#url">URL fetch</a>
@@ -116,7 +116,7 @@ export default function DocsPage() {
         </aside>
 
         <article className="docs-content">
-          <section id="overview">
+          <section id="overview" className="docs-overview">
             <h2>What AgentGate does</h2>
             <p>
               AgentGate checks untrusted text before an agent processes it. The
@@ -124,9 +124,32 @@ export default function DocsPage() {
               instructions when present, and the server attempts conservative
               fuzzy removal before returning sanitized content.
             </p>
+            <div className="docs-quick-grid" aria-label="API summary">
+              <div>
+                <strong>Input</strong>
+                <span>Trusted task plus untrusted content.</span>
+              </div>
+              <div>
+                <strong>Decision</strong>
+                <span>ALLOW, SANITIZE, BLOCK, or ERROR.</span>
+              </div>
+              <div>
+                <strong>Output</strong>
+                <span>Sanitized content, blocked output, and metadata.</span>
+              </div>
+            </div>
           </section>
 
-          <section id="sanitize">
+          <section id="request-shape">
+            <h2>Request shape</h2>
+            <p>
+              The direct scanner endpoint is the smallest integration path. Use
+              ingestion endpoints when AgentGate should fetch or unwrap the
+              source first.
+            </p>
+          </section>
+
+          <section id="sanitize" className="endpoint-section">
             <h2>Direct API</h2>
             <div className="endpoint-row">
               <code>POST</code>
@@ -136,11 +159,11 @@ export default function DocsPage() {
               Use this when the caller already has the untrusted content body.
               Required fields are <code>userTask</code> and <code>content</code>.
             </p>
-            <CodeBlock value={requestExample} />
+            <CodeBlock value={requestExample} copyable />
             <CodeBlock value={sanitizeCurlExample} copyable />
           </section>
 
-          <section id="webhook">
+          <section id="webhook" className="endpoint-section">
             <h2>Webhook ingestion</h2>
             <div className="endpoint-row">
               <code>POST</code>
@@ -154,7 +177,7 @@ export default function DocsPage() {
             <CodeBlock value={webhookCurlExample} copyable />
           </section>
 
-          <section id="url">
+          <section id="url" className="endpoint-section">
             <h2>URL fetch ingestion</h2>
             <div className="endpoint-row">
               <code>POST</code>
@@ -172,7 +195,7 @@ export default function DocsPage() {
             <CodeBlock value={urlCurlExample} copyable />
           </section>
 
-          <section id="file">
+          <section id="file" className="endpoint-section">
             <h2>File upload ingestion</h2>
             <div className="endpoint-row">
               <code>POST</code>
@@ -197,7 +220,7 @@ export default function DocsPage() {
               Supabase persistence is unavailable, the result still returns with
               <code>persisted: false</code> and a warning.
             </p>
-            <CodeBlock value={responseExample} />
+            <CodeBlock value={responseExample} copyable />
           </section>
 
           <section id="errors">
@@ -206,10 +229,10 @@ export default function DocsPage() {
               Errors return JSON with <code>verdict: ERROR</code> and a safe
               client message.
             </p>
-            <CodeBlock value={rateLimitErrorExample} />
-            <CodeBlock value={missingKeyErrorExample} />
-            <CodeBlock value={blockedUrlErrorExample} />
-            <CodeBlock value={unsupportedFileErrorExample} />
+            <CodeBlock value={rateLimitErrorExample} copyable />
+            <CodeBlock value={missingKeyErrorExample} copyable />
+            <CodeBlock value={blockedUrlErrorExample} copyable />
+            <CodeBlock value={unsupportedFileErrorExample} copyable />
           </section>
 
           <section id="persistence">

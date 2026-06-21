@@ -48,6 +48,7 @@ function ResultSummary({ state }: { state: RequestState }) {
       <div className="source-result error-box" aria-live="polite">
         <strong>Request failed</strong>
         <p>{state.error}</p>
+        <p>Check the input and try again. URL and file safeguards reject unsafe sources before scanning.</p>
       </div>
     );
   }
@@ -262,6 +263,18 @@ export function SourcesTester() {
           Send trusted task, source type, and untrusted content directly to the
           existing scanner endpoint.
         </p>
+        <div className="source-method-meta">
+          <span>JSON body</span>
+          <span>Returns normalized decision</span>
+          <span>Can save run history</span>
+        </div>
+        <div className="source-security-notes">
+          <strong>Safety notes</strong>
+          <p>
+            Private URLs are blocked, file uploads are capped at 1 MB, and
+            provider keys stay server-side.
+          </p>
+        </div>
         <Link className="button secondary-button" href="/docs#sanitize">
           Open API docs
         </Link>
@@ -359,7 +372,7 @@ export function SourcesTester() {
             type="submit"
             disabled={webhookState.loading}
           >
-            {webhookState.loading ? "Sending webhook test…" : "Send webhook test"}
+            {webhookState.loading ? "Sending webhook test..." : "Send webhook test"}
           </button>
         </form>
         <ResultSummary state={webhookState} />
@@ -385,7 +398,7 @@ export function SourcesTester() {
               autoComplete="url"
               value={url}
               onChange={(event) => setUrl(event.target.value)}
-              placeholder="https://example.com…"
+              placeholder="https://example.com..."
             />
           </div>
           <div className="field">
@@ -404,7 +417,7 @@ export function SourcesTester() {
             type="submit"
             disabled={urlState.loading}
           >
-            {urlState.loading ? "Fetching URL…" : "Fetch and check"}
+            {urlState.loading ? "Fetching URL..." : "Fetch and check"}
           </button>
         </form>
         <ResultSummary state={urlState} />
@@ -447,7 +460,7 @@ export function SourcesTester() {
             type="submit"
             disabled={fileState.loading}
           >
-            {fileState.loading ? "Uploading file…" : "Upload and check"}
+            {fileState.loading ? "Uploading file..." : "Upload and check"}
           </button>
         </form>
         <ResultSummary state={fileState} />

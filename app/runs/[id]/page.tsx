@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { CodeBlock } from "@/components/CodeBlock";
+import { PageHeader } from "@/components/PageHeader";
 import { RiskMeter } from "@/components/RiskMeter";
 import { VerdictBadge } from "@/components/VerdictBadge";
 import { getGuardrailRun } from "@/lib/db/runs";
@@ -121,16 +122,17 @@ export default async function RunDetailPage({
     <main className="page-shell" id="main-content">
       <AppHeader active="runs" />
 
-      <section className="run-detail-header">
-        <div>
-          <p className="section-kicker">Saved run</p>
-          <h1>Guardrail result</h1>
+      <PageHeader
+        label="Saved run"
+        title="Guardrail result"
+        action={
+          <Link className="button secondary-button" href="/runs">
+            Back to runs
+          </Link>
+        }
+      >
           <p>{formatDate(run.createdAt)}</p>
-        </div>
-        <Link className="button secondary-button" href="/runs">
-          Back to runs
-        </Link>
-      </section>
+      </PageHeader>
 
       <section className="run-detail-grid">
         <aside className="panel run-summary-panel">
@@ -189,6 +191,7 @@ export default async function RunDetailPage({
               <CodeBlock
                 value={run.extractedInjection ?? ""}
                 emptyText="No injected instruction detected."
+                copyable
               />
             </section>
 
@@ -203,12 +206,12 @@ export default async function RunDetailPage({
 
           <section className="result-section">
             <h3>Removed content</h3>
-            <CodeBlock value={removedContent} />
+            <CodeBlock value={removedContent} copyable />
           </section>
 
           <section className="result-section">
             <h3>Original content</h3>
-            <CodeBlock value={run.originalContent} />
+            <CodeBlock value={run.originalContent} copyable />
           </section>
 
           <section className="result-section">

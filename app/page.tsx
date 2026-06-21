@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/AppHeader";
+import { PageHeader } from "@/components/PageHeader";
 import { SanitizeForm } from "@/components/SanitizeForm";
 import { getMaxInputChars } from "@/lib/utils/validation";
 
@@ -8,44 +9,43 @@ export default function Home() {
       <AppHeader active="home" />
 
       <section className="scanner-intro" aria-labelledby="scanner-title">
-        <div>
-          <p className="section-kicker">Guardrail scanner</p>
-          <h1 id="scanner-title">Inspect untrusted content before an agent reads it.</h1>
+        <PageHeader
+          label="Guardrail scanner"
+          titleId="scanner-title"
+          title="Check untrusted content before it reaches an agent."
+          action={
+            <div className="hero-actions">
+              <a className="button primary-button" href="#scanner-workspace">
+                Start scan
+              </a>
+              <a className="button secondary-button" href="/sources">
+                Test sources
+              </a>
+            </div>
+          }
+        >
           <p>
-            AgentGate checks retrieved text for injected instructions, extracts
-            the suspect span, removes confident matches, and returns the content
-            that would be passed to the agent.
+            Untrusted content enters, AgentGate checks for injected
+            instructions, then returns sanitized content or blocks the output.
           </p>
-          <div className="hero-actions">
-            <a className="button primary-button" href="#scanner-workspace">
-              Start a scan
-            </a>
-            <a className="button secondary-button" href="/sources">
-              Test sources
-            </a>
-          </div>
-        </div>
+        </PageHeader>
 
         <ol className="workflow-strip" aria-label="AgentGate workflow">
           <li>
-            <strong>Capture</strong>
-            <span>Untrusted content enters</span>
+            <strong>Untrusted content</strong>
+            <span>Ticket, page, file, email, or tool output</span>
           </li>
           <li>
-            <strong>Classify</strong>
-            <span>Guardrail model checks it</span>
+            <strong>Guardrail check</strong>
+            <span>Classify, score risk, and extract injection</span>
           </li>
           <li>
-            <strong>Extract</strong>
-            <span>Injected instruction is isolated</span>
+            <strong>Extraction/removal</strong>
+            <span>Remove confident matches conservatively</span>
           </li>
           <li>
-            <strong>Sanitize</strong>
-            <span>Confident matches are removed</span>
-          </li>
-          <li>
-            <strong>Return</strong>
-            <span>Safe content is handed back</span>
+            <strong>Safe output or block</strong>
+            <span>Return sanitized content or stop the handoff</span>
           </li>
         </ol>
       </section>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppHeader } from "@/components/AppHeader";
+import { PageHeader } from "@/components/PageHeader";
 import { VerdictBadge } from "@/components/VerdictBadge";
 import { listGuardrailRuns, type GuardrailRunSummary } from "@/lib/db/runs";
 
@@ -13,7 +14,7 @@ function formatDate(value: string) {
 }
 
 function snippet(value: string, length = 82) {
-  return value.length > length ? `${value.slice(0, length).trim()}…` : value;
+  return value.length > length ? `${value.slice(0, length).trim()}...` : value;
 }
 
 function metadataString(
@@ -56,24 +57,24 @@ function RunsTable({ runs }: { runs: GuardrailRunSummary[] }) {
         <tbody>
           {runs.map((run) => (
             <tr key={run.id}>
-              <td>
+              <td data-label="Created">
                 <Link className="table-primary-link" href={`/runs/${run.id}`}>
                   {formatDate(run.createdAt)}
                 </Link>
               </td>
-              <td>
+              <td data-label="Decision">
                 <VerdictBadge verdict={run.verdict} />
               </td>
-              <td>
+              <td data-label="Risk">
                 <span className={`risk-label ${run.riskLevel}`}>
                   {run.riskLevel} / {run.riskScore}
                 </span>
               </td>
-              <td>{metadataString(run.metadata, "ingestion_method")}</td>
-              <td>{run.sourceType.replaceAll("_", " ")}</td>
-              <td>{snippet(run.userTask)}</td>
-              <td>{run.containsInjection ? "Yes" : "No"}</td>
-              <td>{run.modelUsed ?? "Unknown"}</td>
+              <td data-label="Method">{metadataString(run.metadata, "ingestion_method")}</td>
+              <td data-label="Source">{run.sourceType.replaceAll("_", " ")}</td>
+              <td data-label="Trusted task">{snippet(run.userTask)}</td>
+              <td data-label="Injection">{run.containsInjection ? "Yes" : "No"}</td>
+              <td data-label="Model">{run.modelUsed ?? "Unknown"}</td>
             </tr>
           ))}
         </tbody>
@@ -99,19 +100,20 @@ export default async function RunsPage() {
     <main className="page-shell" id="main-content">
       <AppHeader active="runs" />
 
-      <section className="history-header">
-        <div>
-          <p className="section-kicker">Run history</p>
-          <h1>Saved guardrail checks</h1>
+      <PageHeader
+        label="Run history"
+        title="Saved guardrail checks"
+        action={
+          <Link className="button secondary-button" href="/">
+            New check
+          </Link>
+        }
+      >
           <p>
             Review previous decisions, extracted injections, provider metadata,
             and sanitized content returned by the scanner.
           </p>
-        </div>
-        <Link className="button secondary-button" href="/">
-          New check
-        </Link>
-      </section>
+      </PageHeader>
 
       <section className="panel history-panel">
         {!error && runs.length > 0 ? (

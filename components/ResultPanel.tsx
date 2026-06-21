@@ -17,14 +17,14 @@ function outputCopy(result: SanitizeResult) {
   if (result.verdict === "BLOCK") {
     return {
       title: "Blocked output",
-      helper: "This content should not be passed to the agent."
+      helper: "Do not use this content."
     };
   }
 
   if (result.verdict === "ALLOW") {
     return {
       title: "Allowed content",
-      helper: "The original content can be passed through."
+      helper: "The original content is safe to use."
     };
   }
 
@@ -67,6 +67,7 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
         <div className="error-box">
           <strong>What happened</strong>
           <p>{error}</p>
+          <p>Check provider configuration, reduce input size, or retry the request.</p>
         </div>
       </aside>
     );
@@ -166,6 +167,7 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
           <CodeBlock
             value={result.extractedInjection ?? ""}
             emptyText="No injected instruction detected."
+            copyable
           />
         </section>
 
@@ -180,12 +182,12 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
 
       <section className="result-section">
         <h3>Removed content</h3>
-        <CodeBlock value={removedContent} />
+        <CodeBlock value={removedContent} copyable />
       </section>
 
       <details className="original-details">
         <summary>Original content</summary>
-        <CodeBlock value={result.originalContent} />
+        <CodeBlock value={result.originalContent} copyable />
       </details>
 
       <section className="result-section">
