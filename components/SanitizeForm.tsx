@@ -158,7 +158,7 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
       id="scanner-workspace"
       aria-label="AgentGate scanner workspace"
     >
-      <form className="panel input-panel" onSubmit={handleSubmit} noValidate>
+      <form className="panel input-panel scanner-card" onSubmit={handleSubmit} noValidate>
         <div className="panel-heading">
           <div>
             <p className="panel-kicker">Input</p>
@@ -188,105 +188,114 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
           </select>
         </div>
 
-        <div className="field">
-          <FieldLabel
-            htmlFor="userTask"
-            label="Trusted task"
-            helper="What the agent is supposed to do."
-          />
-          <textarea
-            id="userTask"
-            name="userTask"
-            autoComplete="off"
-            value={userTask}
-            maxLength={2000}
-            onChange={(event) => {
-              setUserTask(event.target.value);
-              setFieldErrors((current) => ({ ...current, userTask: undefined }));
-            }}
-            placeholder="Summarize this support ticket..."
-            aria-invalid={Boolean(fieldErrors.userTask)}
-            aria-describedby={fieldErrors.userTask ? "userTask-error" : undefined}
-          />
-          <div className="field-meta">
-            {fieldErrors.userTask ? (
-              <span id="userTask-error" className="field-error">
-                {fieldErrors.userTask}
-              </span>
-            ) : (
-              <span>{userTask.length}/2,000</span>
-            )}
+        <div className="scanner-lane">
+          <div className="lane-index">Task</div>
+          <div className="field">
+            <FieldLabel
+              htmlFor="userTask"
+              label="Trusted task"
+              helper="What the agent is supposed to do."
+            />
+            <textarea
+              id="userTask"
+              name="userTask"
+              autoComplete="off"
+              value={userTask}
+              maxLength={2000}
+              onChange={(event) => {
+                setUserTask(event.target.value);
+                setFieldErrors((current) => ({ ...current, userTask: undefined }));
+              }}
+              placeholder="Summarize this support ticket..."
+              aria-invalid={Boolean(fieldErrors.userTask)}
+              aria-describedby={fieldErrors.userTask ? "userTask-error" : undefined}
+            />
+            <div className="field-meta">
+              {fieldErrors.userTask ? (
+                <span id="userTask-error" className="field-error">
+                  {fieldErrors.userTask}
+                </span>
+              ) : (
+                <span>{userTask.length}/2,000</span>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="field-grid">
-          <div className="field">
-            <FieldLabel htmlFor="sourceType" label="Source type" />
-            <select
-              id="sourceType"
-              name="sourceType"
-              value={sourceType}
-              onChange={(event) => setSourceType(event.target.value as SourceType)}
-            >
-              {SOURCE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {formatOption(option)}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="scanner-lane compact-lane">
+          <div className="lane-index">Policy</div>
+          <div className="field-grid">
+            <div className="field">
+              <FieldLabel htmlFor="sourceType" label="Source type" />
+              <select
+                id="sourceType"
+                name="sourceType"
+                value={sourceType}
+                onChange={(event) => setSourceType(event.target.value as SourceType)}
+              >
+                {SOURCE_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {formatOption(option)}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div className="field">
-            <FieldLabel htmlFor="promptStrategy" label="Prompt strategy" />
-            <select
-              id="promptStrategy"
-              name="promptStrategy"
-              value={promptStrategy}
-              onChange={(event) =>
-                setPromptStrategy(event.target.value as PromptStrategy)
-              }
-            >
-              {STRATEGY_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {formatOption(option)}
-                </option>
-              ))}
-            </select>
+            <div className="field">
+              <FieldLabel htmlFor="promptStrategy" label="Prompt strategy" />
+              <select
+                id="promptStrategy"
+                name="promptStrategy"
+                value={promptStrategy}
+                onChange={(event) =>
+                  setPromptStrategy(event.target.value as PromptStrategy)
+                }
+              >
+                {STRATEGY_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {formatOption(option)}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
-        <div className="field">
-          <FieldLabel
-            htmlFor="content"
-            label="Untrusted content"
-            helper="Ticket, email, webpage, document, or tool output."
-          />
-          <textarea
-            className="content-input"
-            id="content"
-            name="content"
-            autoComplete="off"
-            value={content}
-            maxLength={maxInputChars + 1}
-            onChange={(event) => {
-              setContent(event.target.value);
-              setFieldErrors((current) => ({ ...current, content: undefined }));
-            }}
-            placeholder="Paste untrusted content here..."
-            aria-invalid={Boolean(fieldErrors.content)}
-            aria-describedby={fieldErrors.content ? "content-error" : undefined}
-          />
-          <div className="field-meta">
-            {fieldErrors.content ? (
-              <span id="content-error" className="field-error">
-                {fieldErrors.content}
-              </span>
-            ) : (
-              <span>
-                {content.length.toLocaleString()} /{" "}
-                {maxInputChars.toLocaleString()} characters
-              </span>
-            )}
+        <div className="scanner-lane content-lane">
+          <div className="lane-index">Content</div>
+          <div className="field">
+            <FieldLabel
+              htmlFor="content"
+              label="Untrusted content"
+              helper="Ticket, email, webpage, document, or tool output."
+            />
+            <textarea
+              className="content-input"
+              id="content"
+              name="content"
+              autoComplete="off"
+              value={content}
+              maxLength={maxInputChars + 1}
+              onChange={(event) => {
+                setContent(event.target.value);
+                setFieldErrors((current) => ({ ...current, content: undefined }));
+              }}
+              placeholder="Paste untrusted content here..."
+              aria-invalid={Boolean(fieldErrors.content)}
+              aria-describedby={fieldErrors.content ? "content-error" : undefined}
+            />
+            <div className="field-meta">
+              {fieldErrors.content ? (
+                <span id="content-error" className="field-error">
+                  {fieldErrors.content}
+                </span>
+              ) : (
+                <span>
+                  {content.length.toLocaleString()} /{" "}
+                  {maxInputChars.toLocaleString()} characters
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

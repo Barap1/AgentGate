@@ -58,7 +58,7 @@ function blockedDueToFailedRemoval(result: SanitizeResult) {
 export function ResultPanel({ result, error }: ResultPanelProps) {
   if (error) {
     return (
-      <aside className="panel result-panel" aria-live="polite">
+      <aside className="panel result-panel result-card" aria-live="polite">
         <div className="panel-heading compact">
           <div>
             <p className="panel-kicker">Result</p>
@@ -78,7 +78,7 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
 
   if (!result) {
     return (
-      <aside className="panel result-panel" aria-live="polite">
+      <aside className="panel result-panel result-card" aria-live="polite">
         <div className="empty-state">
           <div className="empty-state-rule" aria-hidden="true" />
           <h2>Run a check to see the guardrail decision.</h2>
@@ -101,7 +101,7 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
         : "No content removed.";
 
   return (
-    <aside className="panel result-panel" aria-live="polite">
+    <aside className="panel result-panel result-card" aria-live="polite">
       <section
         className={`decision-summary ${result.verdict.toLowerCase()}`}
         aria-labelledby="decision-title"

@@ -105,6 +105,9 @@ async function parseResponse(response: Response) {
 }
 
 export function SourcesTester() {
+  const [activeMethod, setActiveMethod] = useState<"webhook" | "url" | "file">(
+    "webhook"
+  );
   const [webhookState, setWebhookState] = useState<RequestState>(initialState);
   const [urlState, setUrlState] = useState<RequestState>(initialState);
   const [fileState, setFileState] = useState<RequestState>(initialState);
@@ -251,23 +254,25 @@ export function SourcesTester() {
   }
 
   return (
-    <section className="sources-grid" aria-label="Ingestion methods">
-      <article className="panel source-card source-card-compact">
-        <div className="panel-heading compact">
-          <div>
-            <p className="panel-kicker">Direct API</p>
-            <h2>POST /api/sanitize</h2>
+    <section className="sources-workbench" aria-label="Ingestion methods">
+      <div className="source-console">
+        <article className="source-direct">
+          <p className="panel-kicker">Direct API</p>
+          <h2>POST /api/sanitize</h2>
+          <p>
+            Send trusted task, source type, and untrusted content directly to the
+            existing scanner endpoint.
+          </p>
+          <div className="source-method-meta">
+            <span>JSON body</span>
+            <span>Normalized decision</span>
+            <span>Saved run support</span>
           </div>
-        </div>
-        <p className="source-card-copy">
-          Send trusted task, source type, and untrusted content directly to the
-          existing scanner endpoint.
-        </p>
-        <div className="source-method-meta">
-          <span>JSON body</span>
-          <span>Returns normalized decision</span>
-          <span>Can save run history</span>
-        </div>
+          <Link className="button secondary-button" href="/docs#sanitize">
+            Open API docs
+          </Link>
+        </article>
+
         <div className="source-security-notes">
           <strong>Safety notes</strong>
           <p>
@@ -275,19 +280,50 @@ export function SourcesTester() {
             provider keys stay server-side.
           </p>
         </div>
-        <Link className="button secondary-button" href="/docs#sanitize">
-          Open API docs
-        </Link>
-      </article>
+      </div>
 
-      <article className="panel source-card">
-        <div className="panel-heading compact">
-          <div>
-            <p className="panel-kicker">Webhook</p>
-            <h2>External system POST</h2>
-          </div>
-        </div>
-        <form className="source-form" onSubmit={submitWebhook}>
+      <div className="source-method-switcher" role="tablist" aria-label="Source method">
+        <button
+          aria-selected={activeMethod === "webhook"}
+          className={activeMethod === "webhook" ? "active" : ""}
+          onClick={() => setActiveMethod("webhook")}
+          role="tab"
+          type="button"
+        >
+          <span>Webhook</span>
+          <strong>External system POST</strong>
+        </button>
+        <button
+          aria-selected={activeMethod === "url"}
+          className={activeMethod === "url" ? "active" : ""}
+          onClick={() => setActiveMethod("url")}
+          role="tab"
+          type="button"
+        >
+          <span>URL fetch</span>
+          <strong>Fetch and check</strong>
+        </button>
+        <button
+          aria-selected={activeMethod === "file"}
+          className={activeMethod === "file" ? "active" : ""}
+          onClick={() => setActiveMethod("file")}
+          role="tab"
+          type="button"
+        >
+          <span>File upload</span>
+          <strong>Text-like files</strong>
+        </button>
+      </div>
+
+      <article className="panel source-card source-active-panel">
+        {activeMethod === "webhook" ? (
+          <form className="source-form" onSubmit={submitWebhook}>
+            <div className="panel-heading compact">
+              <div>
+                <p className="panel-kicker">Webhook</p>
+                <h2>External system POST</h2>
+              </div>
+            </div>
           <div className="demo-loader compact-demo-loader">
             <div>
               <strong>Load demo</strong>
@@ -374,21 +410,21 @@ export function SourcesTester() {
           >
             {webhookState.loading ? "Sending webhook test..." : "Send webhook test"}
           </button>
-        </form>
-        <ResultSummary state={webhookState} />
-      </article>
+            <ResultSummary state={webhookState} />
+          </form>
+        ) : null}
 
-      <article className="panel source-card">
-        <div className="panel-heading compact">
-          <div>
-            <p className="panel-kicker">URL fetch</p>
-            <h2>Fetch and check</h2>
-          </div>
-        </div>
-        <p className="source-card-copy">
-          Localhost and private-network URLs are blocked.
-        </p>
-        <form className="source-form" onSubmit={submitUrl}>
+        {activeMethod === "url" ? (
+          <form className="source-form source-form-narrow" onSubmit={submitUrl}>
+            <div className="panel-heading compact">
+              <div>
+                <p className="panel-kicker">URL fetch</p>
+                <h2>Fetch and check</h2>
+              </div>
+            </div>
+            <p className="source-card-copy">
+              Localhost and private-network URLs are blocked.
+            </p>
           <div className="field">
             <FieldLabel htmlFor="url" label="URL" />
             <input
@@ -419,21 +455,21 @@ export function SourcesTester() {
           >
             {urlState.loading ? "Fetching URL..." : "Fetch and check"}
           </button>
-        </form>
-        <ResultSummary state={urlState} />
-      </article>
+            <ResultSummary state={urlState} />
+          </form>
+        ) : null}
 
-      <article className="panel source-card">
-        <div className="panel-heading compact">
-          <div>
-            <p className="panel-kicker">File upload</p>
-            <h2>Text-like files</h2>
-          </div>
-        </div>
-        <p className="source-card-copy">
-          Allowed: .txt, .md, .html, .htm, .json, .csv, and .log up to 1 MB.
-        </p>
-        <form className="source-form" onSubmit={submitFile}>
+        {activeMethod === "file" ? (
+          <form className="source-form source-form-narrow" onSubmit={submitFile}>
+            <div className="panel-heading compact">
+              <div>
+                <p className="panel-kicker">File upload</p>
+                <h2>Text-like files</h2>
+              </div>
+            </div>
+            <p className="source-card-copy">
+              Allowed: .txt, .md, .html, .htm, .json, .csv, and .log up to 1 MB.
+            </p>
           <div className="field">
             <FieldLabel htmlFor="fileTask" label="Trusted task" />
             <textarea
@@ -462,8 +498,9 @@ export function SourcesTester() {
           >
             {fileState.loading ? "Uploading file..." : "Upload and check"}
           </button>
-        </form>
-        <ResultSummary state={fileState} />
+            <ResultSummary state={fileState} />
+          </form>
+        ) : null}
       </article>
     </section>
   );

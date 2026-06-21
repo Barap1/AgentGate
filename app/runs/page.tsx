@@ -29,7 +29,7 @@ function metadataString(
     : fallback;
 }
 
-function RunsTable({ runs }: { runs: GuardrailRunSummary[] }) {
+function RunsList({ runs }: { runs: GuardrailRunSummary[] }) {
   if (runs.length === 0) {
     return (
       <div className="history-empty">
@@ -40,45 +40,31 @@ function RunsTable({ runs }: { runs: GuardrailRunSummary[] }) {
   }
 
   return (
-    <div className="runs-table-wrap">
-      <table className="runs-table">
-        <thead>
-          <tr>
-            <th>Created</th>
-            <th>Decision</th>
-            <th>Risk</th>
-            <th>Method</th>
-            <th>Source</th>
-            <th>Trusted task</th>
-            <th>Injection</th>
-            <th>Model</th>
-          </tr>
-        </thead>
-        <tbody>
-          {runs.map((run) => (
-            <tr key={run.id}>
-              <td data-label="Created">
-                <Link className="table-primary-link" href={`/runs/${run.id}`}>
-                  {formatDate(run.createdAt)}
-                </Link>
-              </td>
-              <td data-label="Decision">
-                <VerdictBadge verdict={run.verdict} />
-              </td>
-              <td data-label="Risk">
-                <span className={`risk-label ${run.riskLevel}`}>
-                  {run.riskLevel} / {run.riskScore}
-                </span>
-              </td>
-              <td data-label="Method">{metadataString(run.metadata, "ingestion_method")}</td>
-              <td data-label="Source">{run.sourceType.replaceAll("_", " ")}</td>
-              <td data-label="Trusted task">{snippet(run.userTask)}</td>
-              <td data-label="Injection">{run.containsInjection ? "Yes" : "No"}</td>
-              <td data-label="Model">{run.modelUsed ?? "Unknown"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="runs-list">
+      {runs.map((run) => (
+        <article className="run-row" key={run.id}>
+          <div className="run-row-main">
+            <Link className="table-primary-link" href={`/runs/${run.id}`}>
+              {snippet(run.userTask, 120)}
+            </Link>
+            <div className="run-row-meta">
+              <span>{formatDate(run.createdAt)}</span>
+              <span>{metadataString(run.metadata, "ingestion_method")}</span>
+              <span>{run.sourceType.replaceAll("_", " ")}</span>
+              <span>{run.modelUsed ?? "Unknown"}</span>
+            </div>
+          </div>
+          <div className="run-row-status">
+            <VerdictBadge verdict={run.verdict} />
+            <span className={`risk-label ${run.riskLevel}`}>
+              {run.riskLevel} / {run.riskScore}
+            </span>
+            <span className="injection-label">
+              Injection {run.containsInjection ? "yes" : "no"}
+            </span>
+          </div>
+        </article>
+      ))}
     </div>
   );
 }
@@ -128,7 +114,7 @@ export default async function RunsPage() {
             <p>{error}</p>
           </div>
         ) : (
-          <RunsTable runs={runs} />
+          <RunsList runs={runs} />
         )}
       </section>
     </main>
