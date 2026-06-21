@@ -13,7 +13,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <footer className="app-footer">
+          Prototype guardrail gateway. Do not submit sensitive data.
+        </footer>
+      </body>
     </html>
   );
 }

@@ -63,6 +63,26 @@ const runsExample = `curl http://localhost:3000/api/runs?limit=25`;
 const runDetailExample =
   `curl http://localhost:3000/api/runs/2f8b3c4a-0bc4-4a84-bda2-7f0f792f4c75`;
 
+const rateLimitErrorExample = `{
+  "verdict": "ERROR",
+  "error": "OpenRouter request failed after trying qwen/qwen3-next-80b-a3b-instruct:free: OpenRouter quota, rate limit, or free-model capacity was exceeded."
+}`;
+
+const missingKeyErrorExample = `{
+  "verdict": "ERROR",
+  "error": "No usable guardrail provider is configured. Set OPENROUTER_API_KEY for OpenRouter or GEMINI_API_KEY for Gemini."
+}`;
+
+const blockedUrlErrorExample = `{
+  "verdict": "ERROR",
+  "error": "Localhost and private-network URLs are blocked."
+}`;
+
+const unsupportedFileErrorExample = `{
+  "verdict": "ERROR",
+  "error": "Unsupported file type. Upload .txt, .md, .html, .htm, .json, .csv, or .log."
+}`;
+
 export default function DocsPage() {
   return (
     <main className="page-shell docs-shell">
@@ -86,6 +106,7 @@ export default function DocsPage() {
           <a href="#url">URL fetch</a>
           <a href="#file">File upload</a>
           <a href="#response">Response body</a>
+          <a href="#errors">Errors</a>
           <a href="#persistence">Persistence</a>
           <a href="#history-api">Run history API</a>
           <a href="#providers">Providers</a>
@@ -177,6 +198,18 @@ export default function DocsPage() {
             <CodeBlock value={responseExample} />
           </section>
 
+          <section id="errors">
+            <h2>Error examples</h2>
+            <p>
+              Errors return JSON with <code>verdict: ERROR</code> and a safe
+              client message.
+            </p>
+            <CodeBlock value={rateLimitErrorExample} />
+            <CodeBlock value={missingKeyErrorExample} />
+            <CodeBlock value={blockedUrlErrorExample} />
+            <CodeBlock value={unsupportedFileErrorExample} />
+          </section>
+
           <section id="persistence">
             <h2>Persistence</h2>
             <p>
@@ -223,7 +256,11 @@ export default function DocsPage() {
               Free provider tiers can return rate or capacity errors. Wait and
               retry, reduce input size, switch models, or switch providers.
               Supabase persistence requires <code>NEXT_PUBLIC_SUPABASE_URL</code>{" "}
-              and <code>SUPABASE_SERVICE_ROLE_KEY</code> on the server.
+              and <code>SUPABASE_SERVICE_ROLE_KEY</code> on the server. A public
+              Supabase client can use either{" "}
+              <code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code> or the legacy{" "}
+              <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>; this demo does not
+              require one for run history.
             </p>
           </section>
 

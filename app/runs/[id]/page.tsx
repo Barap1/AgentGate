@@ -38,14 +38,26 @@ function outputCopy(verdict: string) {
   if (verdict === "ALLOW") {
     return {
       title: "Allowed content",
-      helper: "This is the content that would be passed to the agent."
+      helper: "The original content can be passed through."
     };
   }
 
   return {
     title: "Sanitized content",
-    helper: "This is the content that would be passed to the agent."
+    helper: "Use this sanitized version."
   };
+}
+
+function whatHappened(verdict: string) {
+  if (verdict === "ALLOW") {
+    return "No injected instruction was detected. The original content can be passed through.";
+  }
+
+  if (verdict === "SANITIZE") {
+    return "An injected instruction was removed. Use the sanitized content below.";
+  }
+
+  return "An injection was detected, but AgentGate did not produce a safe sanitized version. Do not pass this content to the agent.";
 }
 
 async function loadRun(id: string) {
@@ -131,6 +143,10 @@ export default async function RunDetailPage({
           </div>
 
           <RiskMeter score={run.riskScore} level={run.riskLevel} />
+
+          <p className={`what-happened ${run.verdict.toLowerCase()}`}>
+            {whatHappened(run.verdict)}
+          </p>
 
           <dl className="metadata-grid">
             <div>
