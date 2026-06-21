@@ -15,7 +15,7 @@ export function clientErrorMessage(error: unknown) {
     lowerMessage.includes("rate limit") ||
     lowerMessage.includes("rate")
   ) {
-    return "Provider rate limit exceeded. Wait and retry, reduce input size, or switch providers.";
+    return "Provider rate limit exceeded. Wait and retry, reduce input size, or switch models.";
   }
 
   if (
@@ -23,7 +23,7 @@ export function clientErrorMessage(error: unknown) {
     lowerMessage.includes("overloaded") ||
     lowerMessage.includes("capacity")
   ) {
-    return "Provider is temporarily unavailable. Wait and retry, reduce input size, or switch providers.";
+    return "Provider is temporarily unavailable. Wait and retry, reduce input size, or switch models.";
   }
 
   return message;

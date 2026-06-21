@@ -258,7 +258,7 @@ export function createOpenRouterProvider(): GuardrailProvider {
 
       if (!apiKey) {
         throw new Error(
-          "OPENROUTER_API_KEY is not configured. Set LLM_PROVIDER=openrouter and add an OpenRouter API key, or configure GEMINI_API_KEY."
+          "OPENROUTER_API_KEY is not configured. Set LLM_PROVIDER=openrouter and add an OpenRouter API key."
         );
       }
 
@@ -267,7 +267,10 @@ export function createOpenRouterProvider(): GuardrailProvider {
         "qwen/qwen3-next-80b-a3b-instruct:free"
       )!;
       const modelsToTry = [primaryModel, ...parseFallbackModels()];
-      const siteUrl = getEnv("OPENROUTER_SITE_URL", "http://localhost:3000")!;
+      const siteUrl = getEnv(
+        "OPENROUTER_SITE_URL",
+        "https://agent--gate.vercel.app"
+      )!;
       const appName = getEnv("OPENROUTER_APP_NAME", "AgentGate")!;
       const attempted: string[] = [];
 

@@ -34,7 +34,7 @@ those inputs before they reach an agent workflow.
 
 - Next.js App Router and TypeScript.
 - `POST /api/sanitize` guardrail endpoint.
-- OpenRouter and Gemini provider support.
+- OpenRouter provider support.
 - Default OpenRouter model: `qwen/qwen3-next-80b-a3b-instruct:free`.
 - Demo UI with sample loaders, result panel, extracted injection, removed
   content, and copy buttons.
@@ -61,7 +61,7 @@ those inputs before they reach an agent workflow.
 - Next.js App Router
 - React
 - TypeScript
-- OpenRouter or Gemini
+- OpenRouter
 - Supabase
 - Vercel-ready Next.js deployment
 
@@ -94,12 +94,8 @@ LLM_PROVIDER=openrouter
 OPENROUTER_API_KEY=
 OPENROUTER_MODEL=qwen/qwen3-next-80b-a3b-instruct:free
 OPENROUTER_FALLBACK_MODELS=
-OPENROUTER_SITE_URL=http://localhost:3000
+OPENROUTER_SITE_URL=https://agent--gate.vercel.app
 OPENROUTER_APP_NAME=AgentGate
-
-GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.5-flash-lite
-GEMINI_FALLBACK_MODEL=
 ```
 
 Supabase:
@@ -146,9 +142,7 @@ SQL-created tables to the Data API, expose `guardrail_runs` and
 If Supabase is not configured, guardrail responses still return with a warning
 and `persisted: false`.
 
-## OpenRouter/Gemini setup
-
-OpenRouter:
+## OpenRouter setup
 
 ```env
 LLM_PROVIDER=openrouter
@@ -157,18 +151,9 @@ OPENROUTER_MODEL=qwen/qwen3-next-80b-a3b-instruct:free
 OPENROUTER_FALLBACK_MODELS=
 ```
 
-Gemini:
-
-```env
-LLM_PROVIDER=gemini
-GEMINI_API_KEY=your_key_here
-GEMINI_MODEL=gemini-2.5-flash-lite
-GEMINI_FALLBACK_MODEL=
-```
-
-If `LLM_PROVIDER` is missing or invalid, AgentGate tries OpenRouter when
-`OPENROUTER_API_KEY` exists, then Gemini when `GEMINI_API_KEY` exists. Free
-models may rate-limit or be temporarily unavailable.
+If `LLM_PROVIDER` is missing, AgentGate uses OpenRouter when
+`OPENROUTER_API_KEY` exists. Free models may rate-limit or be temporarily
+unavailable.
 
 ## API endpoints
 
@@ -271,8 +256,8 @@ the current setup.
 
 Vercel notes:
 
-- Keep `SUPABASE_SERVICE_ROLE_KEY`, `OPENROUTER_API_KEY`, and `GEMINI_API_KEY`
-  as server-side environment variables.
+- Keep `SUPABASE_SERVICE_ROLE_KEY` and `OPENROUTER_API_KEY` as server-side
+  environment variables.
 - Do not submit real secrets or customer data.
 - Free provider models may rate-limit.
 - If using URL ingestion, verify `MAX_FETCH_BYTES` and `FETCH_TIMEOUT_MS` for

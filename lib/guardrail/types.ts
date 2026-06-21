@@ -11,7 +11,7 @@ export type Verdict = "ALLOW" | "SANITIZE" | "BLOCK" | "ERROR";
 
 export type RiskLevel = "low" | "medium" | "high" | "critical";
 
-export type LlmProvider = "gemini" | "openrouter";
+export type LlmProvider = "openrouter";
 
 export type PromptStrategy =
   | "basic"

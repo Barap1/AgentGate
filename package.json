@@ -9,7 +9,6 @@
     "eval:local": "node scripts/run-evals.mjs"
   },
   "dependencies": {
-    "@google/genai": "latest",
     "@supabase/supabase-js": "2.108.2",
     "lucide-react": "latest",
     "next": "latest",

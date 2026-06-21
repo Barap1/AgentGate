@@ -16,7 +16,7 @@ const navItems = [
   { href: "/", label: "Home", active: "home", icon: Home },
   { href: "/sources", label: "Sources", active: "sources", icon: PlugZap },
   { href: "/runs", label: "Runs", active: "runs", icon: History },
-  { href: "/docs", label: "Docs", active: "docs", icon: BookOpen }
+  { href: "/docs", label: "API Docs", active: "docs", icon: BookOpen }
 ] as const;
 
 export function AppHeader({ active = "home" }: AppHeaderProps) {
