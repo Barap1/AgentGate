@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   let formData: FormData;
-  
+
   try {
     formData = await request.formData();
   } catch {
