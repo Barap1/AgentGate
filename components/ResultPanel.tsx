@@ -8,11 +8,8 @@ import Link from "next/link";
 type ResultPanelProps = {
   result: SanitizeResult | null;
   error: string | null;
+  loading?: boolean;
 };
-
-function formatBoolean(value: boolean) {
-  return value ? "Yes" : "No";
-}
 
 function outputCopy(result: SanitizeResult) {
   if (result.verdict === "BLOCK") {
@@ -55,7 +52,33 @@ function blockedDueToFailedRemoval(result: SanitizeResult) {
   );
 }
 
-export function ResultPanel({ result, error }: ResultPanelProps) {
+export function ResultPanel({ result, error, loading = false }: ResultPanelProps) {
+  if (loading) {
+    return (
+      <aside className="panel result-panel result-card" aria-live="polite">
+        <div className="check-progress" role="status">
+          <div>
+            <p className="panel-kicker">Guardrail check</p>
+            <h2>Checking untrusted content</h2>
+            <p>
+              Looking for conflicting instructions and unsafe tool-use requests.
+              This usually takes a few seconds.
+            </p>
+          </div>
+          <div className="progress-line" aria-hidden="true">
+            <span />
+          </div>
+          <ol className="progress-steps">
+            <li>Preparing untrusted content</li>
+            <li>Running guardrail model</li>
+            <li>Extracting injected instructions</li>
+            <li>Building safe output</li>
+          </ol>
+        </div>
+      </aside>
+    );
+  }
+
   if (error) {
     return (
       <aside className="panel result-panel result-card" aria-live="polite">
@@ -69,7 +92,7 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
           <AlertTitle>What happened</AlertTitle>
           <AlertDescription>
             <p>{error}</p>
-            <p>Check provider configuration, reduce input size, or retry the request.</p>
+            <p>Check configuration, reduce input size, or retry the request.</p>
           </AlertDescription>
         </Alert>
       </aside>
@@ -84,7 +107,7 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
           <h2>Run a check to see the guardrail decision.</h2>
           <p>
             The result will show the verdict, extracted injection, sanitized
-            content, provider metadata, and categories.
+            content, and warning categories.
           </p>
         </div>
       </aside>
@@ -120,25 +143,6 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
           {whatHappened(result)}
         </p>
 
-        <dl className="metadata-grid">
-          <div>
-            <dt>Risk level</dt>
-            <dd>{result.riskLevel}</dd>
-          </div>
-          <div>
-            <dt>Contains injection</dt>
-            <dd>{formatBoolean(result.containsInjection)}</dd>
-          </div>
-          <div>
-            <dt>Provider</dt>
-            <dd>{result.provider}</dd>
-          </div>
-          <div>
-            <dt>Model</dt>
-            <dd>{result.modelUsed}</dd>
-          </div>
-        </dl>
-
         {result.persisted && result.runId ? (
           <div className="saved-run-callout">
             <span>Saved run</span>
@@ -164,24 +168,13 @@ export function ResultPanel({ result, error }: ResultPanelProps) {
         ) : null}
       </section>
 
-      <div className="result-compare">
-        <section className="result-section">
-          <h3>Extracted injection</h3>
-          <CodeBlock
-            value={result.extractedInjection ?? ""}
-            emptyText="No injected instruction detected."
-            copyable
-          />
-        </section>
-
-        <section className="result-section">
-          <div className="section-title-row">
-            <h3>{output.title}</h3>
-            <span>{output.helper}</span>
-          </div>
-          <CodeBlock value={result.sanitizedContent} copyable />
-        </section>
-      </div>
+      <section className="result-section">
+        <div className="section-title-row">
+          <h3>{output.title}</h3>
+          <span>{output.helper}</span>
+        </div>
+        <CodeBlock value={result.sanitizedContent} copyable />
+      </section>
 
       <section className="result-section">
         <h3>Removed content</h3>

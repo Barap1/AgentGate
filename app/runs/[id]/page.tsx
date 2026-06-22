@@ -3,8 +3,6 @@ import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { CodeBlock } from "@/components/CodeBlock";
 import { PageHeader } from "@/components/PageHeader";
-import { RiskMeter } from "@/components/RiskMeter";
-import { VerdictBadge } from "@/components/VerdictBadge";
 import { getGuardrailRun } from "@/lib/db/runs";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +24,22 @@ function metadataString(
   return typeof value === "string" && value.trim().length > 0
     ? value.replaceAll("_", " ")
     : fallback;
+}
+
+function formatVerdict(verdict: string) {
+  if (verdict === "ALLOW") {
+    return "allowed";
+  }
+
+  if (verdict === "SANITIZE") {
+    return "sanitized";
+  }
+
+  if (verdict === "BLOCK") {
+    return "blocked";
+  }
+
+  return "error";
 }
 
 function outputCopy(verdict: string) {
@@ -141,10 +155,13 @@ export default async function RunDetailPage({
               <p className="panel-kicker">Decision</p>
               <h2>Summary</h2>
             </div>
-            <VerdictBadge verdict={run.verdict} />
+            <div className="run-row-status">
+              <span className={`risk-label ${run.riskLevel}`}>
+                {run.riskLevel}
+              </span>
+              <span className="run-verdict">{formatVerdict(run.verdict)}</span>
+            </div>
           </div>
-
-          <RiskMeter score={run.riskScore} level={run.riskLevel} />
 
           <p className={`what-happened ${run.verdict.toLowerCase()}`}>
             {whatHappened(run.verdict)}
@@ -163,14 +180,6 @@ export default async function RunDetailPage({
               <dt>Injection</dt>
               <dd>{run.containsInjection ? "Yes" : "No"}</dd>
             </div>
-            <div>
-              <dt>Provider</dt>
-              <dd>{run.provider ?? "Unknown"}</dd>
-            </div>
-            <div>
-              <dt>Model</dt>
-              <dd>{run.modelUsed ?? "Unknown"}</dd>
-            </div>
           </dl>
         </aside>
 
@@ -185,24 +194,13 @@ export default async function RunDetailPage({
             <p className="reason">{run.reason ?? "No reason stored."}</p>
           </section>
 
-          <div className="result-compare">
-            <section className="result-section">
-              <h3>Extracted injection</h3>
-              <CodeBlock
-                value={run.extractedInjection ?? ""}
-                emptyText="No injected instruction detected."
-                copyable
-              />
-            </section>
-
-            <section className="result-section">
-              <div className="section-title-row">
-                <h3>{output.title}</h3>
-                <span>{output.helper}</span>
-              </div>
-              <CodeBlock value={run.sanitizedContent} copyable />
-            </section>
-          </div>
+          <section className="result-section">
+            <div className="section-title-row">
+              <h3>{output.title}</h3>
+              <span>{output.helper}</span>
+            </div>
+            <CodeBlock value={run.sanitizedContent} copyable />
+          </section>
 
           <section className="result-section">
             <h3>Removed content</h3>
@@ -240,12 +238,26 @@ export default async function RunDetailPage({
             </section>
           ) : null}
 
-          {Object.keys(run.metadata).length > 0 ? (
-            <section className="result-section">
-              <h3>Metadata</h3>
+          <details className="technical-details">
+            <summary>Technical details</summary>
+            <dl className="metadata-grid">
+              <div>
+                <dt>Risk score</dt>
+                <dd>{run.riskScore}/100</dd>
+              </div>
+              <div>
+                <dt>Provider</dt>
+                <dd>{run.provider ?? "Unknown"}</dd>
+              </div>
+              <div>
+                <dt>Model</dt>
+                <dd>{run.modelUsed ?? "Unknown"}</dd>
+              </div>
+            </dl>
+            {Object.keys(run.metadata).length > 0 ? (
               <CodeBlock value={JSON.stringify(run.metadata, null, 2)} copyable />
-            </section>
-          ) : null}
+            ) : null}
+          </details>
         </article>
       </section>
     </main>

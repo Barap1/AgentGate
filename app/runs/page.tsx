@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { AppHeader } from "@/components/AppHeader";
 import { PageHeader } from "@/components/PageHeader";
-import { VerdictBadge } from "@/components/VerdictBadge";
 import { listGuardrailRuns, type GuardrailRunSummary } from "@/lib/db/runs";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +28,22 @@ function metadataString(
     : fallback;
 }
 
+function formatVerdict(verdict: string) {
+  if (verdict === "ALLOW") {
+    return "allowed";
+  }
+
+  if (verdict === "SANITIZE") {
+    return "sanitized";
+  }
+
+  if (verdict === "BLOCK") {
+    return "blocked";
+  }
+
+  return "error";
+}
+
 function RunsList({ runs }: { runs: GuardrailRunSummary[] }) {
   if (runs.length === 0) {
     return (
@@ -42,28 +57,24 @@ function RunsList({ runs }: { runs: GuardrailRunSummary[] }) {
   return (
     <div className="runs-list">
       {runs.map((run) => (
-        <article className="run-row" key={run.id}>
+        <Link className="run-row" href={`/runs/${run.id}`} key={run.id}>
           <div className="run-row-main">
-            <Link className="table-primary-link" href={`/runs/${run.id}`}>
+            <span className="run-row-title">
               {snippet(run.userTask, 120)}
-            </Link>
+            </span>
             <div className="run-row-meta">
               <span>{formatDate(run.createdAt)}</span>
               <span>{metadataString(run.metadata, "ingestion_method")}</span>
               <span>{run.sourceType.replaceAll("_", " ")}</span>
-              <span>{run.modelUsed ?? "Unknown"}</span>
             </div>
           </div>
           <div className="run-row-status">
-            <VerdictBadge verdict={run.verdict} />
             <span className={`risk-label ${run.riskLevel}`}>
-              {run.riskLevel} / {run.riskScore}
+              {run.riskLevel}
             </span>
-            <span className="injection-label">
-              Injection {run.containsInjection ? "yes" : "no"}
-            </span>
+            <span className="run-verdict">{formatVerdict(run.verdict)}</span>
           </div>
-        </article>
+        </Link>
       ))}
     </div>
   );
@@ -96,8 +107,8 @@ export default async function RunsPage() {
         }
       >
           <p>
-            Review previous decisions, extracted injections, provider metadata,
-            and sanitized content returned by the scanner.
+            Review previous decisions, extracted injections, and sanitized
+            content returned by the scanner.
           </p>
       </PageHeader>
 

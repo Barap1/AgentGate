@@ -117,6 +117,7 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
 
     setLoading(true);
     setError(null);
+    setResult(null);
 
     try {
       const response = await fetch("/api/sanitize", {
@@ -319,17 +320,11 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
         </div>
 
         <p className="technical-note">
-          Provider calls run server-side. API keys stay in `.env.local`.
+          Guardrail checks run server-side. API keys stay in `.env.local`.
         </p>
-        {loading ? (
-          <div className="loading-state" role="status">
-            <span />
-            Checking content. This can take a few seconds.
-          </div>
-        ) : null}
       </form>
 
-      <ResultPanel result={result} error={error} />
+      <ResultPanel result={result} error={error} loading={loading} />
     </section>
   );
 }
