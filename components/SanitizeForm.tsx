@@ -1,8 +1,10 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { ResultPanel } from "@/components/ResultPanel";
 import { FieldLabel } from "@/components/FieldLabel";
+import { useAuthSession } from "@/components/useAuthSession";
 import {
   defaultDemoExample,
   demoExamples,
@@ -49,6 +51,11 @@ function formatOption(option: string) {
 }
 
 export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
+  const {
+    error: authError,
+    loading: authLoading,
+    session
+  } = useAuthSession();
   const [selectedDemoId, setSelectedDemoId] = useState(defaultDemoExample.id);
   const [userTask, setUserTask] = useState(defaultDemoExample.userTask);
   const [sourceType, setSourceType] = useState<SourceType>(
@@ -111,7 +118,7 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (loading || !validateFields()) {
+    if (loading || authLoading || !validateFields()) {
       return;
     }
 
@@ -123,7 +130,10 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
       const response = await fetch("/api/sanitize", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          ...(session
+            ? { "Authorization": `Bearer ${session.access_token}` }
+            : {})
         },
         body: JSON.stringify({
           userTask,
@@ -188,6 +198,17 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
             ))}
           </select>
         </div>
+
+        {!authLoading && !session ? (
+          <div className="auth-callout">
+            <strong>{authError ? "Run history is not configured" : "Scan without signing in"}</strong>
+            <p>
+              {authError ??
+                "You can run checks now. Create an account after the scan to save future runs."}
+            </p>
+            {authError ? null : <Link href="/login">Sign up to save runs</Link>}
+          </div>
+        ) : null}
 
         <div className="scanner-lane">
           <div className="lane-index">Task</div>
@@ -305,7 +326,7 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
             aria-busy={loading}
             className="button primary-button"
             type="submit"
-            disabled={loading}
+            disabled={loading || authLoading}
           >
           {loading ? "Checking untrusted content..." : "Run guardrail check"}
           </button>
@@ -324,7 +345,12 @@ export function SanitizeForm({ maxInputChars }: SanitizeFormProps) {
         </p>
       </form>
 
-      <ResultPanel result={result} error={error} loading={loading} />
+      <ResultPanel
+        result={result}
+        error={error}
+        signedIn={Boolean(session)}
+        loading={loading}
+      />
     </section>
   );
 }

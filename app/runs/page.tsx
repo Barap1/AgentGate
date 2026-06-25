@@ -1,9 +1,21 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppHeader } from "@/components/AppHeader";
 import { PageHeader } from "@/components/PageHeader";
-import { listGuardrailRuns, type GuardrailRunSummary } from "@/lib/db/runs";
+import { useAuthSession } from "@/components/useAuthSession";
+import type { RiskLevel, SourceType, Verdict } from "@/lib/guardrail/types";
 
-export const dynamic = "force-dynamic";
+type GuardrailRunSummary = {
+  id: string;
+  createdAt: string;
+  sourceType: SourceType;
+  userTask: string;
+  verdict: Verdict;
+  riskLevel: RiskLevel;
+  metadata: Record<string, unknown>;
+};
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat(undefined, {
@@ -59,9 +71,7 @@ function RunsList({ runs }: { runs: GuardrailRunSummary[] }) {
       {runs.map((run) => (
         <Link className="run-row" href={`/runs/${run.id}`} key={run.id}>
           <div className="run-row-main">
-            <span className="run-row-title">
-              {snippet(run.userTask, 120)}
-            </span>
+            <span className="run-row-title">{snippet(run.userTask, 120)}</span>
             <div className="run-row-meta">
               <span>{formatDate(run.createdAt)}</span>
               <span>{metadataString(run.metadata, "ingestion_method")}</span>
@@ -80,18 +90,45 @@ function RunsList({ runs }: { runs: GuardrailRunSummary[] }) {
   );
 }
 
-export default async function RunsPage() {
-  let runs: GuardrailRunSummary[] = [];
-  let error: string | null = null;
+export default function RunsPage() {
+  const {
+    error: authError,
+    loading: authLoading,
+    session
+  } = useAuthSession();
+  const [runs, setRuns] = useState<GuardrailRunSummary[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  try {
-    runs = await listGuardrailRuns(50);
-  } catch (runHistoryError) {
-    error =
-      runHistoryError instanceof Error
-        ? runHistoryError.message
-        : "Run history is unavailable.";
-  }
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+
+    fetch("/api/runs?limit=50", {
+      headers: {
+        "Authorization": `Bearer ${session.access_token}`
+      }
+    })
+      .then(async (response) => {
+        const payload = await response.json();
+
+        if (!response.ok) {
+          throw new Error(payload.error ?? "Run history is unavailable.");
+        }
+
+        setRuns(payload.runs ?? []);
+        setError(null);
+      })
+      .catch((runError) => {
+        setError(
+          runError instanceof Error ? runError.message : "Run history is unavailable."
+        );
+      })
+      .finally(() => setLoaded(true));
+  }, [session]);
+
+  const loading = Boolean(session) && !loaded && !error;
 
   return (
     <main className="page-shell" id="main-content">
@@ -106,26 +143,45 @@ export default async function RunsPage() {
           </Link>
         }
       >
-          <p>
-            Review previous decisions, extracted injections, and sanitized
-            content returned by the scanner.
-          </p>
+        <p>
+          Review previous decisions, extracted injections, and sanitized content
+          returned by the scanner.
+        </p>
       </PageHeader>
 
       <section className="panel history-panel">
-        {!error && runs.length > 0 ? (
-          <div className="history-toolbar">
-            <strong>{runs.length} recent runs</strong>
-            <span>Newest first</span>
+        {!authLoading && !session ? (
+          <div className="history-empty">
+            <h2>{authError ? "Run history is not configured." : "Sign up to save and view runs."}</h2>
+            <p>
+              {authError ??
+                "You can run scans without an account. Saved run history starts after you create one."}
+            </p>
+            {authError ? null : (
+              <Link className="button primary-button" href="/login">
+                Sign up
+              </Link>
+            )}
           </div>
-        ) : null}
-        {error ? (
+        ) : error ? (
           <div className="history-empty">
             <h2>Run history unavailable.</h2>
             <p>{error}</p>
           </div>
+        ) : loading || authLoading ? (
+          <div className="history-empty">
+            <h2>Loading runs...</h2>
+          </div>
         ) : (
-          <RunsList runs={runs} />
+          <>
+            {runs.length > 0 ? (
+              <div className="history-toolbar">
+                <strong>{runs.length} recent runs</strong>
+                <span>Newest first</span>
+              </div>
+            ) : null}
+            <RunsList runs={runs} />
+          </>
         )}
       </section>
     </main>

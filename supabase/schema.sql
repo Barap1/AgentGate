@@ -2,6 +2,7 @@ create extension if not exists pgcrypto;
 
 create table if not exists public.guardrail_runs (
   id uuid primary key default gen_random_uuid(),
+  user_id uuid null references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
   source_type text not null,
   user_task text not null,
@@ -41,6 +42,12 @@ create table if not exists public.guardrail_runs (
     )
 );
 
+alter table public.guardrail_runs
+  add column if not exists user_id uuid null references auth.users(id) on delete cascade;
+
+create index if not exists guardrail_runs_user_created_at_idx
+  on public.guardrail_runs (user_id, created_at desc);
+
 create index if not exists guardrail_runs_created_at_idx
   on public.guardrail_runs (created_at desc);
 
@@ -74,5 +81,28 @@ create index if not exists guardrail_findings_severity_idx
 alter table public.guardrail_runs enable row level security;
 alter table public.guardrail_findings enable row level security;
 
--- Phase 3/4 intentionally adds no anon/authenticated policies.
--- Server route handlers use the service role key for local-demo persistence.
+drop policy if exists "Users can read their guardrail runs"
+  on public.guardrail_runs;
+create policy "Users can read their guardrail runs"
+  on public.guardrail_runs
+  for select
+  to authenticated
+  using ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can read findings for their guardrail runs"
+  on public.guardrail_findings;
+create policy "Users can read findings for their guardrail runs"
+  on public.guardrail_findings
+  for select
+  to authenticated
+  using (
+    exists (
+      select 1
+      from public.guardrail_runs
+      where guardrail_runs.id = guardrail_findings.run_id
+        and guardrail_runs.user_id = (select auth.uid())
+    )
+  );
+
+-- Server route handlers write with SUPABASE_SERVICE_ROLE_KEY after verifying
+-- the Supabase Auth user from the bearer token.

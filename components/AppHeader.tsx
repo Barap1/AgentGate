@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthStatus } from "@/components/AuthStatus";
 import {
   BookOpen,
   GitBranch,
@@ -9,7 +10,7 @@ import {
 } from "lucide-react";
 
 type AppHeaderProps = {
-  active?: "home" | "sources" | "runs" | "docs";
+  active?: "home" | "sources" | "runs" | "docs" | "login";
 };
 
 const navItems = [
@@ -57,6 +58,7 @@ export function AppHeader({ active = "home" }: AppHeaderProps) {
           <GitBranch aria-hidden="true" size={15} strokeWidth={2.1} />
           GitHub
         </a>
+        <AuthStatus />
       </nav>
     </header>
   );

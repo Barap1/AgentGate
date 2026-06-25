@@ -8,6 +8,7 @@ import {
   requiredContent,
   requireJsonObject
 } from "@/lib/ingest/validation";
+import { authErrorResponse, optionalAuthUser } from "@/lib/supabase/auth";
 import { errorResponse } from "@/lib/utils/api";
 
 export const runtime = "nodejs";
@@ -28,6 +29,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    const user = await optionalAuthUser(request);
     const input = requireJsonObject(body);
     const sourceName = optionalString(input.sourceName, "sourceName", 200);
     const externalId = optionalString(input.externalId, "externalId", 200);
@@ -41,11 +43,18 @@ export async function POST(request: Request) {
         ingestion_method: "webhook",
         source_name: sourceName,
         external_id: externalId
-      }
+      },
+      userId: user?.id
     });
 
     return NextResponse.json(result);
   } catch (error) {
+    const authResponse = authErrorResponse(error);
+
+    if (authResponse) {
+      return authResponse;
+    }
+
     return errorResponse(error);
   }
 }

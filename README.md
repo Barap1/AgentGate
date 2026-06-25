@@ -36,8 +36,8 @@ those inputs before they reach an agent workflow.
 - `POST /api/sanitize` guardrail endpoint.
 - OpenRouter provider support.
 - Default OpenRouter model: `qwen/qwen3-next-80b-a3b-instruct:free`.
-- Demo UI with sample loaders, result panel, extracted injection, removed
-  content, and copy buttons.
+- Demo UI with sample loaders, result panel, sanitized content, removed content,
+  and copy buttons.
 - Webhook, URL, and text-file ingestion.
 - URL checks that block localhost and private-network targets.
 - Upload size, extension, content-type, and UTF-8 checks.
@@ -49,12 +49,11 @@ those inputs before they reach an agent workflow.
 1. Open `/`.
 2. Load the malicious support-ticket example.
 3. Run the guardrail check.
-4. Show the extracted injection.
-5. Show sanitized or blocked output.
-6. Open the saved run from the result panel.
-7. Open `/sources`.
-8. Test webhook or file upload ingestion.
-9. Open `/docs` to show API integration examples.
+4. Show sanitized or blocked output.
+5. Sign up to save future runs, or open the saved run if already signed in.
+6. Open `/sources`.
+7. Test webhook or file upload ingestion.
+8. Open `/docs` to show API integration examples.
 
 ## Tech stack
 
@@ -108,9 +107,9 @@ SUPABASE_SERVICE_ROLE_KEY=
 ```
 
 The current app uses `NEXT_PUBLIC_SUPABASE_URL` and
-`SUPABASE_SERVICE_ROLE_KEY` on the server for run history. A future browser
-Supabase client can use either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or the
-legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+`SUPABASE_SERVICE_ROLE_KEY` on the server for run history. The browser auth
+client also needs either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or the legacy
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
 Limits:
 
@@ -129,18 +128,21 @@ Do not commit `.env.local`.
 
 1. Create or open the Supabase project named `agent gate`.
 2. Run `supabase/schema.sql` in the SQL Editor.
-3. Add `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to
-   `.env.local` or Vercel environment variables.
-4. Keep the service role key server-side only.
+3. In Auth Providers, enable Email, Google, and GitHub.
+4. Add these redirect URLs in Auth URL Configuration:
+   - `http://localhost:3000/login`
+   - `https://agent--gate.vercel.app/login`
+5. Add `NEXT_PUBLIC_SUPABASE_URL`, one public browser key, and
+   `SUPABASE_SERVICE_ROLE_KEY` to `.env.local` or Vercel environment variables.
+6. Keep the service role key server-side only.
 
-The schema enables RLS and intentionally adds no public `anon` or
-`authenticated` policies. This demo uses server-side service-role access for
-single-user demo history. If a new Supabase project does not expose
-SQL-created tables to the Data API, expose `guardrail_runs` and
-`guardrail_findings` for server-side access while keeping RLS enabled.
+The schema enables RLS and user-scoped read policies. API route handlers verify
+the Supabase bearer token, write with the service role key, and only return rows
+where `guardrail_runs.user_id` matches the signed-in user. Existing rows without
+`user_id` will not appear in account history unless you backfill them.
 
-If Supabase is not configured, guardrail responses still return with a warning
-and `persisted: false`.
+Scans work without signing in. Anonymous results are not saved. `/api/runs` and
+saved run detail pages require a signed-in Supabase user.
 
 ## OpenRouter setup
 
@@ -270,11 +272,12 @@ Vercel notes:
 - Detection quality depends on the selected model.
 - Fuzzy removal is conservative and may block instead of sanitize.
 - Benign security-training text can be ambiguous.
-- No auth, OAuth, background jobs, PDF parsing, or docx parsing yet.
+- Email/password, Google, and GitHub auth are included. Background jobs, PDF
+  parsing, and docx parsing are not.
 
 ## Future work
 
-- Authentication and per-user RLS policies.
+- Team/workspace accounts.
 - Real Slack, Zendesk, Gmail, browser, or RAG-source integrations.
 - Background processing for larger sources.
 - PDF and docx ingestion.

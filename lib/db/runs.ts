@@ -63,6 +63,7 @@ export type GuardrailRunDetail = GuardrailRunSummary & {
 
 type GuardrailRunRow = {
   id: string;
+  user_id: string;
   created_at: string;
   source_type: SourceType;
   user_task: string;
@@ -195,12 +196,14 @@ function compactMetadata(metadata: Record<string, unknown>) {
 
 export async function saveGuardrailRun(
   result: SanitizeResult,
-  metadata: Record<string, unknown> = {}
+  metadata: Record<string, unknown> = {},
+  userId?: string
 ): Promise<string> {
   const supabase = getRunHistoryClient();
   const { data, error } = await supabase
     .from("guardrail_runs")
     .insert({
+      user_id: userId,
       source_type: result.sourceType,
       user_task: result.userTask,
       original_content: result.originalContent,
@@ -253,7 +256,10 @@ export async function saveGuardrailRun(
   return runId;
 }
 
-export async function listGuardrailRuns(limit = 25): Promise<GuardrailRunSummary[]> {
+export async function listGuardrailRuns(
+  userId: string,
+  limit = 25
+): Promise<GuardrailRunSummary[]> {
   const normalizedLimit = Math.max(1, Math.min(limit, 100));
   const supabase = getRunHistoryClient();
   const { data, error } = await supabase
@@ -261,6 +267,7 @@ export async function listGuardrailRuns(limit = 25): Promise<GuardrailRunSummary
     .select(
       "id, created_at, source_type, user_task, contains_injection, removed, verdict, risk_level, risk_score, provider, model_used, prompt_strategy, categories, warnings, metadata"
     )
+    .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(normalizedLimit);
 
@@ -272,13 +279,15 @@ export async function listGuardrailRuns(limit = 25): Promise<GuardrailRunSummary
 }
 
 export async function getGuardrailRun(
-  id: string
+  id: string,
+  userId: string
 ): Promise<GuardrailRunDetail | null> {
   const supabase = getRunHistoryClient();
   const { data, error } = await supabase
     .from("guardrail_runs")
     .select("*")
     .eq("id", id)
+    .eq("user_id", userId)
     .single();
 
   if (error) {

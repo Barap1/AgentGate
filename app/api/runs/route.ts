@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { listGuardrailRuns, normalizeRunHistoryError } from "@/lib/db/runs";
+import { authErrorResponse, requireAuthUser } from "@/lib/supabase/auth";
 
 export const runtime = "nodejs";
 
@@ -9,12 +10,22 @@ export async function GET(request: Request) {
   const limit = rawLimit ? Number.parseInt(rawLimit, 10) : 25;
 
   try {
-    const runs = await listGuardrailRuns(Number.isFinite(limit) ? limit : 25);
+    const user = await requireAuthUser(request);
+    const runs = await listGuardrailRuns(
+      user.id,
+      Number.isFinite(limit) ? limit : 25
+    );
 
     return NextResponse.json({
       runs
     });
   } catch (error) {
+    const authResponse = authErrorResponse(error);
+
+    if (authResponse) {
+      return authResponse;
+    }
+
     const runHistoryError = normalizeRunHistoryError(error);
 
     return NextResponse.json(

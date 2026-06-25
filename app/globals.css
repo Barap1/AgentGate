@@ -232,6 +232,10 @@ h1 {
   border-color: var(--border);
 }
 
+.nav-button {
+  background: transparent;
+}
+
 .nav-link:active,
 .button:active,
 .copy-button:active {
@@ -609,6 +613,106 @@ h1 {
 
 .technical-note {
   margin-top: 12px;
+}
+
+.auth-shell {
+  max-width: 760px;
+}
+
+.auth-panel {
+  display: grid;
+  gap: 16px;
+  max-width: 480px;
+  padding: 24px;
+}
+
+.auth-panel h2,
+.auth-panel p {
+  margin: 0;
+}
+
+.auth-panel h2 {
+  color: var(--text-strong);
+  font-size: 1.1rem;
+}
+
+.auth-panel p,
+.auth-message {
+  color: var(--muted-text);
+  line-height: 1.5;
+}
+
+.auth-panel .field label {
+  color: var(--text-strong);
+  font-size: 0.87rem;
+  font-weight: 700;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted-text);
+  font-size: 0.78rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  height: 1px;
+  flex: 1;
+  content: "";
+  background: var(--border);
+}
+
+.auth-provider-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.provider-mark {
+  display: inline-grid;
+  width: 18px;
+  height: 16px;
+  place-items: center;
+  color: #2563eb;
+  font-size: 0.76rem;
+  font-weight: 760;
+}
+
+.github-mark {
+  color: var(--text-strong);
+  font-size: 0.68rem;
+}
+
+.auth-callout {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 12px;
+  background: var(--accent-soft);
+  border: 1px solid #cbd9ee;
+  border-radius: var(--radius);
+}
+
+.auth-callout strong {
+  color: var(--accent-strong);
+  font-size: 0.9rem;
+}
+
+.auth-callout p {
+  margin: 0;
+  color: var(--muted-text);
+  font-size: 0.84rem;
+}
+
+.auth-callout a {
+  width: fit-content;
+  color: var(--accent-strong);
+  font-size: 0.84rem;
+  font-weight: 720;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .empty-state {
@@ -1063,6 +1167,10 @@ h1 {
   font-size: 0.84rem;
 }
 
+.saved-run-callout.muted .button {
+  margin-top: 4px;
+}
+
 .docs-shell {
   max-width: 1060px;
 }
@@ -1409,6 +1517,10 @@ h1 {
   margin: 8px 0 0;
   color: var(--muted-text);
   line-height: 1.5;
+}
+
+.history-empty .button {
+  margin-top: 18px;
 }
 
 .table-primary-link,

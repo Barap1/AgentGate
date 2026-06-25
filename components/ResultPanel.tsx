@@ -8,6 +8,7 @@ import Link from "next/link";
 type ResultPanelProps = {
   result: SanitizeResult | null;
   error: string | null;
+  signedIn?: boolean;
   loading?: boolean;
 };
 
@@ -52,7 +53,12 @@ function blockedDueToFailedRemoval(result: SanitizeResult) {
   );
 }
 
-export function ResultPanel({ result, error, loading = false }: ResultPanelProps) {
+export function ResultPanel({
+  result,
+  error,
+  signedIn = false,
+  loading = false
+}: ResultPanelProps) {
   if (loading) {
     return (
       <aside className="panel result-panel result-card" aria-live="polite">
@@ -106,7 +112,7 @@ export function ResultPanel({ result, error, loading = false }: ResultPanelProps
           <div className="empty-state-rule" aria-hidden="true" />
           <h2>Run a check to see the guardrail decision.</h2>
           <p>
-            The result will show the verdict, extracted injection, sanitized
+            The result will show the verdict, sanitized content, removed
             content, and warning categories.
           </p>
         </div>
@@ -150,8 +156,17 @@ export function ResultPanel({ result, error, loading = false }: ResultPanelProps
           </div>
         ) : result.persisted === false ? (
           <div className="saved-run-callout muted">
-            <span>Run not saved</span>
-            <p>Configure Supabase to enable history.</p>
+            <span>{signedIn ? "Run not saved" : "Save future scans"}</span>
+            <p>
+              {signedIn
+                ? "Run history is unavailable. Check Supabase configuration."
+                : "Create an account to save runs and view them later."}
+            </p>
+            {signedIn ? null : (
+              <Link className="button secondary-button" href="/login">
+                Sign up to save runs
+              </Link>
+            )}
           </div>
         ) : null}
       </section>

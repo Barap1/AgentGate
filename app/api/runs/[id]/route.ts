@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getGuardrailRun, normalizeRunHistoryError } from "@/lib/db/runs";
+import { authErrorResponse, requireAuthUser } from "@/lib/supabase/auth";
 
 export const runtime = "nodejs";
 
@@ -7,7 +8,7 @@ const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
@@ -22,7 +23,8 @@ export async function GET(
   }
 
   try {
-    const run = await getGuardrailRun(id);
+    const user = await requireAuthUser(request);
+    const run = await getGuardrailRun(id, user.id);
 
     if (!run) {
       return NextResponse.json(
@@ -37,6 +39,12 @@ export async function GET(
       run
     });
   } catch (error) {
+    const authResponse = authErrorResponse(error);
+
+    if (authResponse) {
+      return authResponse;
+    }
+
     const runHistoryError = normalizeRunHistoryError(error);
 
     return NextResponse.json(

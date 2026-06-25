@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { FieldLabel } from "@/components/FieldLabel";
 import { RiskMeter } from "@/components/RiskMeter";
+import { useAuthSession } from "@/components/useAuthSession";
 import { VerdictBadge } from "@/components/VerdictBadge";
 import {
   defaultDemoExample,
@@ -42,7 +43,13 @@ function formatOption(option: string) {
   return option.replaceAll("_", " ");
 }
 
-function ResultSummary({ state }: { state: RequestState }) {
+function ResultSummary({
+  state,
+  signedIn
+}: {
+  state: RequestState;
+  signedIn: boolean;
+}) {
   if (state.error) {
     return (
       <div className="source-result error-box" aria-live="polite">
@@ -69,7 +76,9 @@ function ResultSummary({ state }: { state: RequestState }) {
         {state.result.persisted && state.result.runId ? (
           <Link href={`/runs/${state.result.runId}`}>Open saved run</Link>
         ) : state.result.persisted === false ? (
-          <span>Run not saved</span>
+          <Link href="/login">
+            {signedIn ? "Run not saved" : "Sign up to save runs"}
+          </Link>
         ) : null}
       </div>
       <RiskMeter score={state.result.riskScore} level={state.result.riskLevel} />
@@ -105,6 +114,11 @@ async function parseResponse(response: Response) {
 }
 
 export function SourcesTester() {
+  const {
+    error: authError,
+    loading: authLoading,
+    session
+  } = useAuthSession();
   const [activeMethod, setActiveMethod] = useState<"webhook" | "url" | "file">(
     "webhook"
   );
@@ -162,7 +176,10 @@ export function SourcesTester() {
       const response = await fetch("/api/ingest/webhook", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          ...(session
+            ? { "Authorization": `Bearer ${session.access_token}` }
+            : {})
         },
         body: JSON.stringify({
           userTask: webhookTask,
@@ -201,7 +218,10 @@ export function SourcesTester() {
       const response = await fetch("/api/ingest/url", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          ...(session
+            ? { "Authorization": `Bearer ${session.access_token}` }
+            : {})
         },
         body: JSON.stringify({
           userTask: urlTask,
@@ -240,6 +260,9 @@ export function SourcesTester() {
     try {
       const response = await fetch("/api/ingest/file", {
         method: "POST",
+        headers: session
+          ? { "Authorization": `Bearer ${session.access_token}` }
+          : undefined,
         body: formData
       });
       const result = await parseResponse(response);
@@ -316,6 +339,16 @@ export function SourcesTester() {
       </div>
 
       <article className="panel source-card source-active-panel">
+        {!authLoading && !session ? (
+          <div className="auth-callout">
+            <strong>{authError ? "Run history is not configured" : "Source tests work without an account"}</strong>
+            <p>
+              {authError ??
+                "Create an account after testing to save future source runs."}
+            </p>
+            {authError ? null : <Link href="/login">Sign up to save runs</Link>}
+          </div>
+        ) : null}
         {activeMethod === "webhook" ? (
           <form className="source-form" onSubmit={submitWebhook}>
             <div className="panel-heading compact">
@@ -406,11 +439,11 @@ export function SourcesTester() {
             aria-busy={webhookState.loading}
             className="button primary-button"
             type="submit"
-            disabled={webhookState.loading}
+            disabled={webhookState.loading || authLoading}
           >
             {webhookState.loading ? "Sending webhook test..." : "Send webhook test"}
           </button>
-            <ResultSummary state={webhookState} />
+            <ResultSummary state={webhookState} signedIn={Boolean(session)} />
           </form>
         ) : null}
 
@@ -451,11 +484,11 @@ export function SourcesTester() {
             aria-busy={urlState.loading}
             className="button primary-button"
             type="submit"
-            disabled={urlState.loading}
+            disabled={urlState.loading || authLoading}
           >
             {urlState.loading ? "Fetching URL..." : "Fetch and check"}
           </button>
-            <ResultSummary state={urlState} />
+            <ResultSummary state={urlState} signedIn={Boolean(session)} />
           </form>
         ) : null}
 
@@ -494,11 +527,11 @@ export function SourcesTester() {
             aria-busy={fileState.loading}
             className="button primary-button"
             type="submit"
-            disabled={fileState.loading}
+            disabled={fileState.loading || authLoading}
           >
             {fileState.loading ? "Uploading file..." : "Upload and check"}
           </button>
-            <ResultSummary state={fileState} />
+            <ResultSummary state={fileState} signedIn={Boolean(session)} />
           </form>
         ) : null}
       </article>

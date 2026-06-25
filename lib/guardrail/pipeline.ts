@@ -7,6 +7,7 @@ import { validateSanitizeRequest } from "@/lib/utils/validation";
 
 type PipelineOptions = {
   metadata?: Record<string, unknown>;
+  userId?: string;
 };
 
 function persistenceWarning(error: unknown) {
@@ -22,8 +23,16 @@ export async function runGuardrailPipeline(
   const sanitizeRequest = validateSanitizeRequest(input);
   const result = await sanitizeContent(sanitizeRequest);
 
+  if (!options.userId) {
+    return {
+      ...result,
+      runId: null,
+      persisted: false
+    };
+  }
+
   try {
-    const runId = await saveGuardrailRun(result, options.metadata);
+    const runId = await saveGuardrailRun(result, options.metadata, options.userId);
 
     return {
       ...result,

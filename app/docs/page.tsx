@@ -61,10 +61,12 @@ const fileCurlExample = `curl -X POST ${apiBaseUrl}/api/ingest/file \\
   -F "sourceType=document" \\
   -F "file=@samples/benign-policy.md"`;
 
-const runsExample = `curl ${apiBaseUrl}/api/runs?limit=25`;
+const runsExample = `curl ${apiBaseUrl}/api/runs?limit=25 \\
+  -H "Authorization: Bearer <access_token>"`;
 
 const runDetailExample =
-  `curl ${apiBaseUrl}/api/runs/2f8b3c4a-0bc4-4a84-bda2-7f0f792f4c75`;
+  `curl ${apiBaseUrl}/api/runs/2f8b3c4a-0bc4-4a84-bda2-7f0f792f4c75 \\
+  -H "Authorization: Bearer <access_token>"`;
 
 const rateLimitErrorExample = `{
   "verdict": "ERROR",
@@ -216,9 +218,10 @@ export default function DocsPage() {
           <section id="response">
             <h2>Response body example</h2>
             <p>
-              All ingestion paths return the same normalized result shape. If
-              Supabase persistence is unavailable, the result still returns with
-              <code>persisted: false</code> and a warning.
+              All ingestion paths return the same normalized result shape after
+              scanning. Add <code>Authorization: Bearer &lt;access_token&gt;</code>{" "}
+              when you want the run saved to the signed-in user. Without auth,
+              the result returns with <code>persisted: false</code>.
             </p>
             <CodeBlock value={responseExample} copyable />
           </section>
@@ -239,12 +242,15 @@ export default function DocsPage() {
             <h2>Persistence</h2>
             <p>
               Guardrail runs are saved to Supabase when server environment
-              variables are configured. Ingestion details are stored in the
-              existing <code>guardrail_runs.metadata</code> JSONB column.
+              variables are configured and the request includes a signed-in
+              Supabase user bearer token. Anonymous scans still run, but they
+              are not saved. Ingestion details are stored in the existing{" "}
+              <code>guardrail_runs.metadata</code> JSONB column.
             </p>
             <p>
               Server route handlers use <code>SUPABASE_SERVICE_ROLE_KEY</code>.
-              The browser never receives the service role key.
+              The browser sends only the user&apos;s bearer token; it never receives
+              the service role key.
             </p>
           </section>
 
@@ -262,7 +268,9 @@ export default function DocsPage() {
             </div>
             <p>
               Use <code>limit</code> on <code>/api/runs</code> to fetch between
-              1 and 100 recent runs.
+              1 and 100 recent runs. Include{" "}
+              <code>Authorization: Bearer &lt;access_token&gt;</code>; each
+              user only receives their own saved runs.
             </p>
             <CodeBlock value={runsExample} copyable />
             <CodeBlock value={runDetailExample} copyable />
@@ -279,11 +287,10 @@ export default function DocsPage() {
               Free OpenRouter tiers can return rate or capacity errors. Wait and
               retry, reduce input size, or switch models.
               Supabase persistence requires <code>NEXT_PUBLIC_SUPABASE_URL</code>{" "}
-              and <code>SUPABASE_SERVICE_ROLE_KEY</code> on the server. A public
-              Supabase client can use either{" "}
+              and <code>SUPABASE_SERVICE_ROLE_KEY</code> on the server. The
+              browser Supabase client also needs either{" "}
               <code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code> or the legacy{" "}
-              <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>; this demo does not
-              require one for run history.
+              <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>.
             </p>
           </section>
 
@@ -294,7 +301,7 @@ export default function DocsPage() {
               <li>Detection quality depends on the configured model.</li>
               <li>Fuzzy removal is conservative and may leave content unchanged.</li>
               <li>Do not submit production secrets or private customer data.</li>
-              <li>No auth, OAuth integrations, or background jobs are included yet.</li>
+              <li>Email/password, Google, and GitHub auth are included; background jobs are not.</li>
             </ul>
           </section>
         </article>
