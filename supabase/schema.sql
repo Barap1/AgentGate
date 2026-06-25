@@ -87,7 +87,7 @@ create policy "Users can read their guardrail runs"
   on public.guardrail_runs
   for select
   to authenticated
-  using ((select auth.uid()) = user_id);
+  using ((select auth.uid()) = public.guardrail_runs.user_id);
 
 drop policy if exists "Users can read findings for their guardrail runs"
   on public.guardrail_findings;

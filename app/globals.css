@@ -615,10 +615,6 @@ h1 {
   margin-top: 12px;
 }
 
-.auth-shell {
-  max-width: 760px;
-}
-
 .auth-panel {
   display: grid;
   gap: 16px;
@@ -1171,12 +1167,22 @@ h1 {
   margin-top: 4px;
 }
 
-.docs-shell {
-  max-width: 1060px;
+.auth-shell > .page-header,
+.auth-shell > .auth-panel {
+  max-width: 760px;
+  margin-inline: auto;
 }
 
-.sources-shell {
+.docs-shell > .page-header,
+.docs-shell > .docs-layout {
+  max-width: 1060px;
+  margin-inline: auto;
+}
+
+.sources-shell > .page-header,
+.sources-shell > .sources-workbench {
   max-width: 1120px;
+  margin-inline: auto;
 }
 
 .sources-workbench {
