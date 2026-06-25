@@ -39,6 +39,6 @@ next-env.d.ts
 .history/
 .codex-dev-server.*
 .next-dev*.log
-
+agents.md
 # local secrets
 secrets.txt
