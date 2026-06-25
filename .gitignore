@@ -1,17 +1,44 @@
-.next/
+# dependencies
 node_modules/
-.agents/
+
+# next.js
+.next/
+out/
+
+# production
+dist/
+build/
+
+# env
 .env
 .env*.local
-.next-dev*.log
-out/
-dist/
+!.env.example
+
+# logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# tests and coverage
+coverage/
+playwright-report/
+test-results/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# vercel
+.vercel/
+
+# local tooling
+.agents/
 .codex/
+.history/
+.codex-dev-server.*
+.next-dev*.log
+
+# local secrets
 secrets.txt
-agents.md
-.codex-dev-server.log
-.codex-dev-server.err.log
