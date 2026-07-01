@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { listActionDecisions } from "@/lib/db/actionDecisions";
 import { listGuardrailRuns, normalizeRunHistoryError } from "@/lib/db/runs";
 import { authErrorResponse, requireAuthUser } from "@/lib/supabase/auth";
 
@@ -11,13 +12,15 @@ export async function GET(request: Request) {
 
   try {
     const user = await requireAuthUser(request);
-    const runs = await listGuardrailRuns(
-      user.id,
-      Number.isFinite(limit) ? limit : 25
-    );
+    const normalizedLimit = Number.isFinite(limit) ? limit : 25;
+    const [runs, actionDecisions] = await Promise.all([
+      listGuardrailRuns(user.id, normalizedLimit),
+      listActionDecisions(user.id, normalizedLimit)
+    ]);
 
     return NextResponse.json({
-      runs
+      runs,
+      actionDecisions
     });
   } catch (error) {
     const authResponse = authErrorResponse(error);
