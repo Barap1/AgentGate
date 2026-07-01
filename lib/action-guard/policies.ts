@@ -134,6 +134,14 @@ export function scoreActionRisk(
     });
   }
 
+  if (hasSignal(signals, ["unsafe_destructive_query"])) {
+    policies.push({
+      id: "unsafe_destructive_database_query",
+      label: "Database query can destructively modify data without narrowing context",
+      hardBlock: true
+    });
+  }
+
   if (request.priorInputVerdict === "BLOCK" && external) {
     policies.push({
       id: "blocked_input_external_action",
