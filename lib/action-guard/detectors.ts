@@ -33,6 +33,15 @@ const sensitiveFilePattern =
 const privateIpPattern =
   /^(?:localhost|127\.|10\.|192\.168\.|172\.(?:1[6-9]|2\d|3[0-1])\.|169\.254\.|::1$|fc00:|fd00:)/i;
 
+function envSet(name: string) {
+  return new Set(
+    (process.env[name] ?? "")
+      .split(",")
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
 function addSignal(
   signals: DetectedSignal[],
   id: string,
@@ -96,6 +105,21 @@ function hostnameFromTarget(target: string) {
   }
 }
 
+function emailDomain(target: string) {
+  const match = target.toLowerCase().match(/@([^@\s>]+)$/);
+  return match?.[1] ?? "";
+}
+
+function isTrustedEmailTarget(target: string) {
+  const domain = emailDomain(target);
+  return Boolean(domain && envSet("AGENTGATE_TRUSTED_EMAIL_DOMAINS").has(domain));
+}
+
+function isTrustedHttpTarget(target: string) {
+  const host = hostnameFromTarget(target);
+  return Boolean(host && envSet("AGENTGATE_TRUSTED_HTTP_HOSTS").has(host));
+}
+
 function detectsPrivateUrl(value: string) {
   const urlMatches = value.match(/https?:\/\/[^\s'"<>]+/gi) ?? [];
 
@@ -116,11 +140,19 @@ function detectTargetRisk(request: ActionGuardRequest, signals: DetectedSignal[]
   const target = action.target.toLowerCase();
   const host = hostnameFromTarget(action.target);
 
-  if (action.type === "send_email" && /@/.test(action.target)) {
+  if (
+    action.type === "send_email" &&
+    /@/.test(action.target) &&
+    !isTrustedEmailTarget(action.target)
+  ) {
     addSignal(signals, "external_email_target", "External email target", "medium", action.target);
   }
 
-  if (action.type === "http_request" && /^https?:\/\//i.test(action.target)) {
+  if (
+    action.type === "http_request" &&
+    /^https?:\/\//i.test(action.target) &&
+    !isTrustedHttpTarget(action.target)
+  ) {
     addSignal(signals, "external_url_target", "External URL target", "medium", host || action.target);
   }
 

@@ -233,8 +233,9 @@ export default function DocsPage() {
               Decisions are <code>ALLOW</code>, <code>REVIEW</code>,{" "}
               <code>BLOCK</code>, or <code>ERROR</code>. Hard-block policies
               include secret exfiltration, private-network requests, sensitive
-              file reads, destructive shell commands, database credential
-              exports, and external actions after a blocked input.
+              file reads, destructive shell commands, destructive database
+              queries, database credential exports, and external actions after a
+              blocked input.
             </p>
             <CodeBlock value={actionGuardRequestExample} copyable />
             <CodeBlock value={actionGuardCurlExample} copyable />
@@ -336,8 +337,10 @@ export default function DocsPage() {
             <p>
               Action decisions are saved in <code>public.action_decisions</code>{" "}
               when the request has a signed-in user. The stored{" "}
-              <code>payload_preview</code> is redacted before insert; full action
-              payloads are not persisted.
+              <code>payload_preview</code> and target preview are redacted before
+              insert; full action payloads and risky target secrets are not
+              persisted. Saved action decisions appear on the existing run
+              history page.
             </p>
           </section>
 
@@ -378,6 +381,12 @@ export default function DocsPage() {
               browser Supabase client also needs either{" "}
               <code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code> or the legacy{" "}
               <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>.
+            </p>
+            <p>
+              Action Guard can trust known destinations with comma-separated{" "}
+              <code>AGENTGATE_TRUSTED_EMAIL_DOMAINS</code> and{" "}
+              <code>AGENTGATE_TRUSTED_HTTP_HOSTS</code>. Private-network and
+              suspicious exfiltration targets are still blocked or flagged.
             </p>
           </section>
 

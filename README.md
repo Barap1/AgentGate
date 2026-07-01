@@ -228,7 +228,14 @@ Review example:
 }
 ```
 
-Signed-in requests can persist action decisions to `public.action_decisions`. The database stores a redacted `payload_preview`, not the full payload, so secrets detected by Action Guard are not saved unredacted.
+Signed-in requests can persist action decisions to `public.action_decisions` and view them from the existing run history page. The database stores a redacted `payload_preview` and redacted target preview, not full risky action data, so secrets detected by Action Guard are not saved unredacted.
+
+Trusted destinations can be configured with comma-separated server env vars:
+
+```text
+AGENTGATE_TRUSTED_EMAIL_DOMAINS=company.com,example.org
+AGENTGATE_TRUSTED_HTTP_HOSTS=api.company.com,internal.company.com
+```
 
 ## Ingestion endpoints
 
