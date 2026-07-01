@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "lint": "eslint .",
-    "eval:local": "node scripts/run-evals.mjs"
+    "eval:local": "node scripts/run-evals.mjs",
+    "eval:actions": "node scripts/run-action-evals.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",
