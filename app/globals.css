@@ -860,6 +860,10 @@ h1 {
   --decision-color: var(--critical);
 }
 
+.decision-summary.review {
+  --decision-color: var(--medium);
+}
+
 .verdict-badge {
   display: inline-flex;
   min-height: 26px;
@@ -888,6 +892,12 @@ h1 {
   color: #87302a;
   background: #fae7e4;
   border: 1px solid #e3b6b0;
+}
+
+.verdict-badge.review {
+  color: #735110;
+  background: #f8eed8;
+  border: 1px solid #dcc391;
 }
 
 .verdict-badge.error {

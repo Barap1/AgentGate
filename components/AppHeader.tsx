@@ -6,15 +6,17 @@ import {
   History,
   Home,
   PlugZap,
-  ShieldCheck
+  ShieldCheck,
+  ShieldAlert
 } from "lucide-react";
 
 type AppHeaderProps = {
-  active?: "home" | "sources" | "runs" | "docs" | "login";
+  active?: "home" | "action-guard" | "sources" | "runs" | "docs" | "login";
 };
 
 const navItems = [
   { href: "/", label: "Home", active: "home", icon: Home },
+  { href: "/action-guard", label: "Actions", active: "action-guard", icon: ShieldAlert },
   { href: "/sources", label: "Sources", active: "sources", icon: PlugZap },
   { href: "/runs", label: "Runs", active: "runs", icon: History },
   { href: "/docs", label: "API Docs", active: "docs", icon: BookOpen }
