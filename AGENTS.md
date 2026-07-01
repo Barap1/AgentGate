@@ -27,4 +27,4 @@ Recent commits use short, imperative summaries such as `ui changes` and `gitigno
 
 ## Security & Configuration Tips
 
-Do not commit `.env.local`, secrets, or generated dev logs. Provider keys are read from environment variables such as `OPENROUTER_API_KEY` and `GEMINI_API_KEY`; Supabase persistence needs `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Preserve SSRF, upload, JSON, and request validation checks unless replacing them with an equally strict path.
+Do not commit `.env.local`, secrets, or generated dev logs. Provider keys are read from environment variables such as `GROQ_API_KEY`; Supabase persistence needs `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Preserve SSRF, upload, JSON, and request validation checks unless replacing them with an equally strict path.

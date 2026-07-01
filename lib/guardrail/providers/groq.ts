@@ -8,16 +8,20 @@ import type {
 } from "@/lib/guardrail/providers/types";
 import type { GuardrailModelResult } from "@/lib/guardrail/types";
 
-type OpenRouterMessage = {
+const defaultBaseUrl = "https://api.groq.com/openai/v1";
+const defaultPrimaryModel = "qwen/qwen3-32b";
+const defaultFallbackModel = "llama-3.3-70b-versatile";
+
+type GroqMessage = {
   content?: unknown;
 };
 
-type OpenRouterChoice = {
-  message?: OpenRouterMessage;
+type GroqChoice = {
+  message?: GroqMessage;
 };
 
-type OpenRouterResponse = {
-  choices?: OpenRouterChoice[];
+type GroqResponse = {
+  choices?: GroqChoice[];
 };
 
 type ProviderError = Error & {
@@ -31,11 +35,13 @@ function getEnv(name: string, fallback?: string) {
   return value && value.length > 0 ? value : fallback;
 }
 
-function parseFallbackModels() {
-  return (process.env.OPENROUTER_FALLBACK_MODELS ?? "")
-    .split(",")
-    .map((model) => model.trim())
-    .filter(Boolean);
+function completionUrl() {
+  return `${getEnv("GROQ_BASE_URL", defaultBaseUrl)!.replace(/\/$/, "")}/chat/completions`;
+}
+
+function requestTimeoutMs() {
+  const parsed = Number.parseInt(getEnv("GROQ_TIMEOUT_MS", "30000")!, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 30000;
 }
 
 function extractJsonObject(rawText: string) {
@@ -87,7 +93,7 @@ function extractJsonObject(rawText: string) {
   return null;
 }
 
-function parseOpenRouterJson(rawText: string): GuardrailModelResult {
+function parseGroqJson(rawText: string): GuardrailModelResult {
   try {
     return parseGuardrailJson(rawText);
   } catch {
@@ -95,7 +101,7 @@ function parseOpenRouterJson(rawText: string): GuardrailModelResult {
 
     if (!repairedJson) {
       throw new Error(
-        "OpenRouter model did not return strict JSON and no JSON object could be extracted."
+        "Groq model did not return strict JSON and no JSON object could be extracted."
       );
     }
 
@@ -103,7 +109,7 @@ function parseOpenRouterJson(rawText: string): GuardrailModelResult {
       return parseGuardrailJson(repairedJson);
     } catch {
       throw new Error(
-        "OpenRouter model returned JSON that did not match the guardrail schema."
+        "Groq model returned JSON that did not match the guardrail schema."
       );
     }
   }
@@ -117,6 +123,27 @@ async function readErrorBody(response: Response) {
     return parsed.error?.message ?? text;
   } catch {
     return response.statusText;
+  }
+}
+
+function logProviderHeaders(response: Response, model: string) {
+  const headers = [
+    "retry-after",
+    "x-ratelimit-limit-requests",
+    "x-ratelimit-remaining-requests",
+    "x-ratelimit-reset-requests",
+    "x-ratelimit-limit-tokens",
+    "x-ratelimit-remaining-tokens",
+    "x-ratelimit-reset-tokens"
+  ]
+    .map((name) => [name, response.headers.get(name)])
+    .filter((entry): entry is [string, string] => Boolean(entry[1]));
+
+  if (headers.length > 0) {
+    console.warn(
+      "Groq provider response headers",
+      Object.fromEntries([["model", model], ...headers])
+    );
   }
 }
 
@@ -145,22 +172,24 @@ function createProviderError(message: string, status?: number): ProviderError {
       : lowerMessage.includes("rate") ||
         lowerMessage.includes("quota") ||
         lowerMessage.includes("unavailable") ||
-        lowerMessage.includes("overloaded");
+        lowerMessage.includes("overloaded") ||
+        lowerMessage.includes("timeout") ||
+        lowerMessage.includes("failed before receiving");
 
   return error;
 }
 
-function describeOpenRouterFailure(error: unknown) {
+function describeGroqFailure(error: unknown) {
   const providerError = error as ProviderError;
   const status = providerError.status;
   const message = error instanceof Error ? error.message.toLowerCase() : "";
 
   if (providerError.authRelated) {
-    return "OpenRouter authentication failed. Check OPENROUTER_API_KEY.";
+    return "Groq authentication failed. Check GROQ_API_KEY.";
   }
 
   if (status === 429 || message.includes("quota") || message.includes("rate")) {
-    return "OpenRouter quota, rate limit, or free-model capacity was exceeded.";
+    return "The provider may be rate-limited or temporarily unavailable.";
   }
 
   if (
@@ -169,27 +198,26 @@ function describeOpenRouterFailure(error: unknown) {
     status === 503 ||
     status === 504 ||
     message.includes("unavailable") ||
-    message.includes("overloaded")
+    message.includes("overloaded") ||
+    message.includes("timeout")
   ) {
-    return "OpenRouter or the selected upstream model is temporarily unavailable.";
+    return "Groq is temporarily unavailable.";
   }
 
   if (status === 400 || message.includes("model")) {
-    return "OpenRouter rejected the request. Check OPENROUTER_MODEL and OPENROUTER_FALLBACK_MODELS.";
+    return "Groq rejected the request. Check GROQ_PRIMARY_MODEL and GROQ_FALLBACK_MODEL.";
   }
 
   if (message.includes("json")) {
-    return error instanceof Error ? error.message : "OpenRouter returned invalid JSON.";
+    return error instanceof Error ? error.message : "Groq returned invalid JSON.";
   }
 
-  return "OpenRouter request failed.";
+  return "Groq request failed.";
 }
 
 async function requestModel({
   model,
   apiKey,
-  siteUrl,
-  appName,
   systemPrompt,
   userTask,
   sourceType,
@@ -198,80 +226,86 @@ async function requestModel({
 }: {
   model: string;
   apiKey: string;
-  siteUrl: string;
-  appName: string;
   systemPrompt: string;
   userTask: string;
   sourceType: string;
   content: string;
   maxOutputTokens: number;
 }): Promise<GuardrailModelResult> {
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": siteUrl,
-      "X-OpenRouter-Title": appName
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt
-        },
-        {
-          role: "user",
-          content: buildGuardrailUserMessage({
-            userTask,
-            sourceType,
-            content
-          })
-        }
-      ],
-      temperature: 0,
-      max_tokens: maxOutputTokens,
-      response_format: { type: "json_object" }
-    })
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), requestTimeoutMs());
+  let response: Response;
+
+  try {
+    response = await fetch(completionUrl(), {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: "system",
+            content: systemPrompt
+          },
+          {
+            role: "user",
+            content: buildGuardrailUserMessage({
+              userTask,
+              sourceType,
+              content
+            })
+          }
+        ],
+        temperature: 0.1,
+        max_tokens: maxOutputTokens,
+        response_format: { type: "json_object" }
+      })
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error && error.name === "AbortError"
+        ? "Groq request timed out."
+        : "Groq request failed before receiving a response.";
+    throw createProviderError(message);
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
+    logProviderHeaders(response, model);
+
     const errorBody = await readErrorBody(response);
     throw createProviderError(errorBody, response.status);
   }
 
-  const data = (await response.json()) as OpenRouterResponse;
+  const data = (await response.json()) as GroqResponse;
   const contentText = data.choices?.[0]?.message?.content;
 
   if (typeof contentText !== "string" || contentText.trim().length === 0) {
-    throw createProviderError("OpenRouter returned an empty message content.");
+    throw createProviderError("Groq returned an empty message content.");
   }
 
-  return parseOpenRouterJson(contentText);
+  return parseGroqJson(contentText);
 }
 
-export function createOpenRouterProvider(): GuardrailProvider {
+export function createGroqProvider(): GuardrailProvider {
   return {
     async check(input): Promise<GuardrailProviderResponse> {
-      const apiKey = getEnv("OPENROUTER_API_KEY");
+      const apiKey = getEnv("GROQ_API_KEY");
 
       if (!apiKey) {
-        throw new Error(
-          "OPENROUTER_API_KEY is not configured. Set LLM_PROVIDER=openrouter and add an OpenRouter API key."
-        );
+        throw new Error("GROQ_API_KEY is not configured.");
       }
 
-      const primaryModel = getEnv(
-        "OPENROUTER_MODEL",
-        "qwen/qwen3-next-80b-a3b-instruct:free"
-      )!;
-      const modelsToTry = [primaryModel, ...parseFallbackModels()];
-      const siteUrl = getEnv(
-        "OPENROUTER_SITE_URL",
-        "https://agent--gate.vercel.app"
-      )!;
-      const appName = getEnv("OPENROUTER_APP_NAME", "AgentGate")!;
+      const primaryModel = getEnv("GROQ_PRIMARY_MODEL", defaultPrimaryModel)!;
+      const fallbackModel = getEnv("GROQ_FALLBACK_MODEL", defaultFallbackModel)!;
+      const modelsToTry = primaryModel === fallbackModel
+        ? [primaryModel]
+        : [primaryModel, fallbackModel];
       const attempted: string[] = [];
 
       for (const model of modelsToTry) {
@@ -282,12 +316,10 @@ export function createOpenRouterProvider(): GuardrailProvider {
             result: await requestModel({
               model,
               apiKey,
-              siteUrl,
-              appName,
               ...input
             }),
             modelUsed: model,
-            provider: "openrouter"
+            provider: "groq"
           };
         } catch (error) {
           const providerError = error as ProviderError;
@@ -295,13 +327,13 @@ export function createOpenRouterProvider(): GuardrailProvider {
 
           if (providerError.authRelated || isLast || !providerError.retryable) {
             throw new Error(
-              `OpenRouter request failed after trying ${attempted.join(", ")}: ${describeOpenRouterFailure(error)}`
+              `Groq request failed after trying ${attempted.join(" and ")}. ${describeGroqFailure(error)}`
             );
           }
         }
       }
 
-      throw new Error("OpenRouter request failed before a model was attempted.");
+      throw new Error("Groq request failed before a model was attempted.");
     }
   };
 }

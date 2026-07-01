@@ -7,7 +7,7 @@ export function clientErrorMessage(error: unknown) {
     lowerMessage.includes("api key") ||
     lowerMessage.includes("no usable guardrail provider")
   ) {
-    return "No LLM provider API key configured. Add one to `.env.local`.";
+    return "No usable guardrail provider is configured. Set GROQ_API_KEY.";
   }
 
   if (
@@ -15,7 +15,7 @@ export function clientErrorMessage(error: unknown) {
     lowerMessage.includes("rate limit") ||
     lowerMessage.includes("rate")
   ) {
-    return "Provider rate limit exceeded. Wait and retry, reduce input size, or switch models.";
+    return "Groq request failed after trying qwen/qwen3-32b and llama-3.3-70b-versatile. The provider may be rate-limited or temporarily unavailable.";
   }
 
   if (
@@ -23,7 +23,7 @@ export function clientErrorMessage(error: unknown) {
     lowerMessage.includes("overloaded") ||
     lowerMessage.includes("capacity")
   ) {
-    return "Provider is temporarily unavailable. Wait and retry, reduce input size, or switch models.";
+    return "Groq request failed after trying qwen/qwen3-32b and llama-3.3-70b-versatile. The provider may be rate-limited or temporarily unavailable.";
   }
 
   return message;
