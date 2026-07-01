@@ -26,6 +26,10 @@ export function actionPayloadPreview(payload: string) {
   return redactSensitive(payload, 500);
 }
 
+export function actionTargetPreview(target: string) {
+  return redactSensitive(target, 500);
+}
+
 export async function saveActionDecision(
   request: ActionGuardRequest,
   result: ActionGuardResult,
@@ -44,7 +48,7 @@ export async function saveActionDecision(
       prior_input_risk_level: request.priorInputRiskLevel,
       action_type: result.actionType,
       tool_name: result.toolName,
-      target: result.target,
+      target: actionTargetPreview(result.target),
       payload_preview: actionPayloadPreview(request.action.payload),
       decision: result.decision,
       risk_level: result.riskLevel,
