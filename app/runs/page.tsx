@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AppHeader } from "@/components/AppHeader";
 import { PageHeader } from "@/components/PageHeader";
 import { useAuthSession } from "@/components/useAuthSession";
+import type { ActionDecision, ActionType } from "@/lib/action-guard/types";
 import type { RiskLevel, SourceType, Verdict } from "@/lib/guardrail/types";
 
 type GuardrailRunSummary = {
@@ -15,6 +16,21 @@ type GuardrailRunSummary = {
   verdict: Verdict;
   riskLevel: RiskLevel;
   metadata: Record<string, unknown>;
+};
+
+type ActionDecisionSummary = {
+  id: string;
+  createdAt: string;
+  agentId: string;
+  actionType: ActionType;
+  toolName: string;
+  target: string;
+  decision: ActionDecision;
+  riskLevel: RiskLevel;
+  riskScore: number;
+  reasons: string[];
+  matchedPolicies: string[];
+  requiresHumanApproval: boolean;
 };
 
 function formatDate(value: string) {
@@ -43,6 +59,10 @@ function metadataString(
 function formatVerdict(verdict: string) {
   if (verdict === "ALLOW") {
     return "allowed";
+  }
+
+  if (verdict === "REVIEW") {
+    return "review";
   }
 
   if (verdict === "SANITIZE") {
@@ -90,6 +110,53 @@ function RunsList({ runs }: { runs: GuardrailRunSummary[] }) {
   );
 }
 
+function ActionDecisionsList({
+  decisions
+}: {
+  decisions: ActionDecisionSummary[];
+}) {
+  if (decisions.length === 0) {
+    return (
+      <div className="history-empty">
+        <h2>No action decisions saved yet.</h2>
+        <p>Run an Action Guard check while signed in to save the first decision.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="runs-list">
+      {decisions.map((decision) => {
+        const reason = decision.reasons[0] ?? decision.matchedPolicies[0] ?? "No policy matched.";
+
+        return (
+          <div className="run-row" key={decision.id}>
+            <div className="run-row-main">
+              <span className="run-row-title">{snippet(decision.target, 120)}</span>
+              <div className="run-row-meta">
+                <span>{formatDate(decision.createdAt)}</span>
+                <span>{decision.agentId}</span>
+                <span>{decision.actionType.replaceAll("_", " ")}</span>
+                <span>{decision.toolName}</span>
+              </div>
+              <div className="run-row-meta">
+                <span>{snippet(reason, 120)}</span>
+                <span>{decision.requiresHumanApproval ? "approval required" : "no approval required"}</span>
+              </div>
+            </div>
+            <div className="run-row-status">
+              <span className={`risk-label ${decision.riskLevel}`}>
+                {decision.riskLevel} {decision.riskScore}
+              </span>
+              <span className="run-verdict">{formatVerdict(decision.decision)}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function RunsPage() {
   const {
     error: authError,
@@ -97,6 +164,7 @@ export default function RunsPage() {
     session
   } = useAuthSession();
   const [runs, setRuns] = useState<GuardrailRunSummary[]>([]);
+  const [actionDecisions, setActionDecisions] = useState<ActionDecisionSummary[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -118,6 +186,7 @@ export default function RunsPage() {
         }
 
         setRuns(payload.runs ?? []);
+        setActionDecisions(payload.actionDecisions ?? []);
         setError(null);
       })
       .catch((runError) => {
@@ -145,7 +214,7 @@ export default function RunsPage() {
       >
         <p>
           Review previous decisions, extracted injections, and sanitized content
-          returned by the scanner.
+          returned by the scanner and Action Guard.
         </p>
       </PageHeader>
 
@@ -176,11 +245,18 @@ export default function RunsPage() {
           <>
             {runs.length > 0 ? (
               <div className="history-toolbar">
-                <strong>{runs.length} recent runs</strong>
+                <strong>Input runs</strong>
                 <span>Newest first</span>
               </div>
             ) : null}
             <RunsList runs={runs} />
+            {actionDecisions.length > 0 ? (
+              <div className="history-toolbar">
+                <strong>Action decisions</strong>
+                <span>{actionDecisions.length} recent decisions</span>
+              </div>
+            ) : null}
+            <ActionDecisionsList decisions={actionDecisions} />
           </>
         )}
       </section>
