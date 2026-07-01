@@ -266,14 +266,6 @@ h1 {
     transform 520ms var(--motion);
 }
 
-.nav-mark {
-  color: rgba(49, 95, 104, 0.72);
-  font-size: 0.62rem;
-  font-weight: 820;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0;
-}
-
 .nav-link:hover,
 .nav-link.active {
   color: var(--text-strong);

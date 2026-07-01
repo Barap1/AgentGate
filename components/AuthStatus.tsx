@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { LogIn, LogOut } from "lucide-react";
 import { useAuthSession } from "@/components/useAuthSession";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -14,7 +15,7 @@ export function AuthStatus() {
   if (!session) {
     return (
       <Link className="nav-link" href="/login">
-        <span className="nav-mark" aria-hidden="true">IN</span>
+        <LogIn aria-hidden="true" size={15} strokeWidth={2.1} />
         Sign in
       </Link>
     );
@@ -26,7 +27,7 @@ export function AuthStatus() {
       onClick={() => getSupabaseBrowserClient().auth.signOut()}
       type="button"
     >
-      <span className="nav-mark" aria-hidden="true">OUT</span>
+      <LogOut aria-hidden="true" size={15} strokeWidth={2.1} />
       Sign out
     </button>
   );
