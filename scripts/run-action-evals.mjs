@@ -68,18 +68,23 @@ function lacksSignals(result, absentSignals = []) {
 
 async function runCase(testCase) {
   try {
+    const body = {
+      agentId: testCase.agentId,
+      sessionId: testCase.sessionId,
+      trustedTask: testCase.trustedTask,
+      priorInputVerdict: testCase.priorInputVerdict,
+      priorInputRiskLevel: testCase.priorInputRiskLevel,
+      action: testCase.action
+    };
+
+    if ("sourceType" in testCase) {
+      body.sourceType = testCase.sourceType;
+    }
+
     const response = await fetch(`${baseUrl}/api/action-guard`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        agentId: testCase.agentId,
-        sessionId: testCase.sessionId,
-        trustedTask: testCase.trustedTask,
-        sourceType: testCase.sourceType,
-        priorInputVerdict: testCase.priorInputVerdict,
-        priorInputRiskLevel: testCase.priorInputRiskLevel,
-        action: testCase.action
-      })
+      body: JSON.stringify(body)
     });
     const result = await response.json();
 
