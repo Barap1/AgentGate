@@ -67,6 +67,18 @@ function optionalString(value: unknown, field: string, maxLength: number): strin
   return value;
 }
 
+function sourceTypeOrDefault(value: unknown): SourceType {
+  if (value === null || value === undefined || value === "") {
+    return "manual_test";
+  }
+
+  if (typeof value === "string" && sourceTypes.has(value as SourceType)) {
+    return value as SourceType;
+  }
+
+  throw new ValidationError("sourceType is invalid.");
+}
+
 function validateAction(value: unknown): AgentAction {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new ValidationError("action must be a JSON object.");
@@ -98,16 +110,12 @@ export function validateActionGuardRequest(body: unknown): ActionGuardRequest {
 
   const input = body as Record<string, unknown>;
   const rawSessionId = optionalString(input.sessionId, "sessionId", 120).trim();
-  const sourceType =
-    typeof input.sourceType === "string" && sourceTypes.has(input.sourceType as SourceType)
-      ? (input.sourceType as SourceType)
-      : "manual_test";
 
   return {
     agentId: requiredString(input.agentId, "agentId", 120),
     sessionId: rawSessionId || `session-${randomUUID()}`,
     trustedTask: requiredString(input.trustedTask, "trustedTask", 2000),
-    sourceType,
+    sourceType: sourceTypeOrDefault(input.sourceType),
     priorInputVerdict: optionalEnum(input.priorInputVerdict, verdicts, "priorInputVerdict"),
     priorInputRiskLevel: optionalEnum(
       input.priorInputRiskLevel,
