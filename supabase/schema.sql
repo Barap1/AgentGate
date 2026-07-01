@@ -104,5 +104,75 @@ create policy "Users can read findings for their guardrail runs"
     )
   );
 
+create table if not exists public.action_decisions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  agent_id text not null,
+  session_id text null,
+  trusted_task text not null,
+  source_type text not null,
+  prior_input_verdict text null,
+  prior_input_risk_level text null,
+  action_type text not null,
+  tool_name text not null,
+  target text not null,
+  payload_preview text null,
+  decision text not null,
+  risk_level text not null,
+  risk_score integer not null,
+  reasons text[] not null default '{}'::text[],
+  matched_policies text[] not null default '{}'::text[],
+  detected_signals text[] not null default '{}'::text[],
+  safe_alternative text null,
+  requires_human_approval boolean not null default false,
+  warnings text[] not null default '{}'::text[],
+  metadata jsonb not null default '{}'::jsonb,
+  constraint action_decisions_decision_check
+    check (decision in ('ALLOW', 'REVIEW', 'BLOCK', 'ERROR')),
+  constraint action_decisions_risk_level_check
+    check (risk_level in ('low', 'medium', 'high', 'critical')),
+  constraint action_decisions_risk_score_check
+    check (risk_score between 0 and 100),
+  constraint action_decisions_action_type_check
+    check (
+      action_type in (
+        'send_email',
+        'http_request',
+        'file_read',
+        'database_query',
+        'shell_command'
+      )
+    )
+);
+
+create index if not exists action_decisions_user_created_at_idx
+  on public.action_decisions (user_id, created_at desc);
+
+create index if not exists action_decisions_decision_idx
+  on public.action_decisions (decision);
+
+create index if not exists action_decisions_risk_level_idx
+  on public.action_decisions (risk_level);
+
+create index if not exists action_decisions_action_type_idx
+  on public.action_decisions (action_type);
+
+create index if not exists action_decisions_agent_id_idx
+  on public.action_decisions (agent_id);
+
+create index if not exists action_decisions_session_id_idx
+  on public.action_decisions (session_id);
+
+alter table public.action_decisions enable row level security;
+
+drop policy if exists "Users can read their action decisions"
+  on public.action_decisions;
+create policy "Users can read their action decisions"
+  on public.action_decisions
+  for select
+  to authenticated
+  using ((select auth.uid()) = public.action_decisions.user_id);
+
 -- Server route handlers write with SUPABASE_SERVICE_ROLE_KEY after verifying
 -- the Supabase Auth user from the bearer token.
