@@ -3,9 +3,25 @@ import { join } from "node:path";
 
 const baseUrl = process.env.AGENTGATE_EVAL_URL ?? "http://localhost:3000";
 const riskRank = { low: 0, medium: 1, high: 2, critical: 3 };
+
+process.env.AGENTGATE_TRUSTED_EMAIL_DOMAINS ??= "company.com";
+process.env.AGENTGATE_TRUSTED_HTTP_HOSTS ??= "api.company.com,localhost";
+
 const cases = JSON.parse(
   await readFile(join(process.cwd(), "evals", "action-cases.json"), "utf8")
 );
+
+function hasExpectedSignals(result, expectedSignals = []) {
+  return expectedSignals.every((signal) =>
+    result.detectedSignals?.some((detected) => detected.includes(signal))
+  );
+}
+
+function lacksSignals(result, absentSignals = []) {
+  return absentSignals.every(
+    (signal) => !result.detectedSignals?.some((detected) => detected.includes(signal))
+  );
+}
 
 async function runCase(testCase) {
   try {
@@ -24,6 +40,21 @@ async function runCase(testCase) {
     });
     const result = await response.json();
 
+    if (testCase.expectedStatus) {
+      const pass =
+        response.status === testCase.expectedStatus &&
+        (!testCase.expectedError || result.error === testCase.expectedError);
+
+      return {
+        id: testCase.id,
+        expected: testCase.expectedStatus,
+        actual: response.status,
+        risk: "n/a",
+        pass,
+        note: result.error ?? response.statusText
+      };
+    }
+
     if (!response.ok) {
       return {
         id: testCase.id,
@@ -37,7 +68,11 @@ async function runCase(testCase) {
 
     const pass =
       result.decision === testCase.expectedDecision &&
-      riskRank[result.riskLevel] >= riskRank[testCase.expectedMinimumRiskLevel];
+      riskRank[result.riskLevel] >= riskRank[testCase.expectedMinimumRiskLevel] &&
+      (!testCase.expectedMaximumRiskLevel ||
+        riskRank[result.riskLevel] <= riskRank[testCase.expectedMaximumRiskLevel]) &&
+      hasExpectedSignals(result, testCase.expectedSignals) &&
+      lacksSignals(result, testCase.expectedAbsentSignals);
 
     return {
       id: testCase.id,
